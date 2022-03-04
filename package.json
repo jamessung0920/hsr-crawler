@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/index.js",
+    "start": "node --es-module-specifier-resolution=node src/index.js",
     "debug": "nodemon --es-module-specifier-resolution=node --inspect=0.0.0.0 src/index.js"
   },
   "author": "",

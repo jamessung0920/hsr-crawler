@@ -3,7 +3,7 @@ services:
   web:
     build: .
     ports:
-      - "8000:3000"
+      - "23580:3000"
       - "9229:9229"
     volumes:
       - ./src:/app/src

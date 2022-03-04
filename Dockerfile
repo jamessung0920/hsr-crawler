@@ -14,7 +14,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 # ENV CHROMIUM_REVISION=961656
 
-COPY package*.json .
+COPY package*.json ./
 
 RUN npm ci
 
