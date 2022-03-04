@@ -1,11 +1,12 @@
-var http = require('http') // 1 - 載入 Node.js 原生模組 http
+import express from 'express';
+import runPuppeteer from './puppeteer';
 
-var server = http.createServer(function (req, res) {
-    console.log(1)
-    console.log(2)
-    res.end('hello world')
-})
+const app = express();
 
-server.listen(3000) //3 - 進入此網站的監聽 port, 就是 localhost:xxxx 的 xxxx
+app.get('/webhook', (req, res) => {
+  //   handleLineWebhook();
+});
 
-console.log('Node.js web server at port 3000 is running..')
+app.listen(3000, () => console.log('app listening on port 3000!'));
+
+runPuppeteer();
