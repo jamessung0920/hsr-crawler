@@ -1,6 +1,6 @@
 version: "3.9" 
 services:
-  web:
+  web-and-crawler:
     build: .
     ports:
       - "23580:3000"
@@ -8,14 +8,25 @@ services:
     volumes:
       - ./src:/app/src
       - ./downloads:/home/pptruser/Downloads
+      - ./migrations:/app/migrations
       - ./package.json:/app/package.json
       - ./package-lock.json:/app/package-lock.json
       - logvolume01:/var/log
     links:
       - redis
-    command: npm run start
+      - postgres
+    command: npm run debug
     env_file: .env
   redis:
     image: redis:6.2.6-alpine
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5432:5432"
 volumes:
   logvolume01: {}

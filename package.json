@@ -7,13 +7,17 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node --es-module-specifier-resolution=node src/index.js",
-    "debug": "nodemon --es-module-specifier-resolution=node --inspect=0.0.0.0 src/index.js"
+    "debug": "nodemon --es-module-specifier-resolution=node --inspect=0.0.0.0 src/index.js",
+    "migrate": "node-pg-migrate"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.26.0",
     "express": "^4.17.3",
+    "node-pg-migrate": "^6.2.1",
+    "pg": "^8.7.3",
+    "pg-pool": "^3.5.1",
     "puppeteer": "^13.4.0",
     "redis": "^4.0.4",
     "uuid": "^8.3.2"

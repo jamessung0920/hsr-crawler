@@ -15,6 +15,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 # ENV CHROMIUM_REVISION=961656
 
 COPY package*.json ./
+COPY migrations migrations
 
 RUN npm ci
 
@@ -24,7 +25,8 @@ RUN addgroup -S pptruser && adduser -S -G pptruser pptruser \
     && chown -R pptruser:pptruser /home/pptruser \
     && chown -R pptruser:pptruser ./node_modules \
     && chown -R pptruser:pptruser ./package.json \
-    && chown -R pptruser:pptruser ./package-lock.json
+    && chown -R pptruser:pptruser ./package-lock.json \
+    && chown -R pptruser:pptruser ./migrations
 
 # Run everything after as non-privileged user.
 USER pptruser
