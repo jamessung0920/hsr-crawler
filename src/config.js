@@ -16,4 +16,7 @@ export default {
       showTicketCount: process.env.SHOW_TICKET_ACCOUNT,
     },
   },
+  puppeteer: {
+    crawlPeriod: process.env.CRAWL_PERIOD,
+  },
 };

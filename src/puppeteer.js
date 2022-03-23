@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import constants from './constants';
 import config from './config';
+import ticketRepo from './repository/ticket';
 
 // import Ticket from './ticket';
 
@@ -18,10 +19,7 @@ async function runPuppeteer(pgPool, redisClient) {
 
   page.on('console', (msg) => console.log(msg.text()));
 
-  // https://www.latebird.co/thsr_tickets
-  await page.goto(
-    'https://www.latebird.co/thsr_tickets/search?utf8=%E2%9C%93&thsr_ticket%5Bfrom_id%5D=1&thsr_ticket%5Bto_id%5D=4&thsr_ticket%5Bdepart_date%5D=2022-03-20&commit=%E6%90%9C%E5%B0%8B',
-  );
+  await page.goto('https://www.latebird.co/thsr_tickets');
 
   // get data and insert to redis
   const rawTickets = await page.evaluate((csts) => {
@@ -84,19 +82,7 @@ async function runPuppeteer(pgPool, redisClient) {
       const id = uuidv4();
       const ticketEntity = transformTicketData(ticket);
 
-      const res = pgPool.query(
-        `
-        INSERT INTO tickets
-        VALUES ($1, $2, $3, $4, $5)
-      `,
-        [
-          id,
-          ticketEntity.stationPair,
-          ticketEntity.departureTime,
-          ticketEntity.discount,
-          ticketEntity.stock,
-        ],
-      );
+      ticketRepo.insertTicket(pgPool, id, ticketEntity);
 
       redisClient.set(id, JSON.stringify(ticket), {
         EX: config.redis.expireTime,
@@ -113,6 +99,7 @@ const ticketDiscountAndPercentOffMapping = {
   早鳥8折: 20,
   '65折': 35,
   早鳥65折: 35,
+  原價: 0,
 };
 
 // transform ticket data to fit database schema

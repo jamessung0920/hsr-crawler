@@ -1,21 +1,22 @@
 import express from 'express';
+import { promisify } from 'util';
+import config from './config';
 import runPuppeteer from './puppeteer';
 import handleLineWebhook from './webhook';
 import initPostgres from './postgres';
 import initRedis from './redis';
+import ticketRepo from './repository/ticket';
 
 const pgPool = initPostgres();
 
 const redisClient = await initRedis();
 
-// const redisClient = await initRedis();
-// redisClient.subscribe('__keyevent@0__:expired');
-// redisClient.on('message', async (channel, message) => {
-//   // Handle event
-//   console.log(channel, message);
-// });
-
-runPuppeteer(pgPool, redisClient);
+// https://redis.io/topics/notifications
+const redisKeyEventClient = redisClient.duplicate();
+await redisKeyEventClient.connect();
+await redisKeyEventClient.subscribe('__keyevent@0__:expired', async (key) => {
+  ticketRepo.deleteTicketById(pgPool, key);
+});
 
 const app = express();
 
@@ -26,3 +27,9 @@ app.post('/webhook', (req, res) => {
 });
 
 app.listen(3000, () => console.log('app listening on port 3000!'));
+
+const sleep = promisify(setTimeout);
+while (true) {
+  runPuppeteer(pgPool, redisClient);
+  await sleep(config.puppeteer.crawlPeriod * 1000);
+}

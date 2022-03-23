@@ -1,5 +1,6 @@
 import axios from 'axios';
 import config from './config';
+import ticketRepo from './repository/ticket';
 
 /** example request body
 {
@@ -28,22 +29,27 @@ async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
     10,
   );
   try {
-    const tickets = await pgPool.query(
-      `
-      SELECT * FROM tickets
-      WHERE station_pair = $1 AND departure_time >= $2 AND stock >= $3
-    `,
-      [expectedStationPair, expectedDepartureAfter, expectedPurchaseCount],
+    const tickets = await ticketRepo.getUserExpectedTickets(
+      pgPool,
+      expectedStationPair,
+      expectedDepartureAfter,
+      expectedPurchaseCount,
     );
 
+    let replyText = '';
     let availableTicketInfo = '';
-    for (const [idx, ticket] of tickets.rows.entries()) {
-      if (idx >= config.webhook.line.showTicketCount) break;
-      // console.log(idx, ticket.id);
-      const rawTicket = await redisClient.get(ticket.id);
-      // console.log(rawTicket);
-      const rawTicketObj = JSON.parse(rawTicket);
-      availableTicketInfo = `${availableTicketInfo}\n${rawTicketObj.stationPair} ${rawTicketObj.date} ${rawTicketObj.time} 庫存還有${rawTicketObj.stock} 價格為${rawTicketObj.price} 折扣為${rawTicketObj.discount}`;
+    if (Array.isArray(tickets.rows) && tickets.rows.length > 0) {
+      for (const [idx, ticket] of tickets.rows.entries()) {
+        if (idx >= config.webhook.line.showTicketCount) break;
+        // console.log(idx, ticket.id);
+        const rawTicket = await redisClient.get(ticket.id);
+        // console.log(rawTicket);
+        const rawTicketObj = JSON.parse(rawTicket);
+        availableTicketInfo = `${availableTicketInfo}\n\n${rawTicketObj.stationPair} ${rawTicketObj.date} ${rawTicketObj.time} 庫存還有${rawTicketObj.stock} 價格為${rawTicketObj.price} 折扣為${rawTicketObj.discount}`;
+      }
+      replyText = `有票喔！幫您列出資訊如下 (最多${config.webhook.line.showTicketCount}筆)\n${availableTicketInfo}`;
+    } else {
+      replyText = '沒有找到符合的票喔！';
     }
 
     const res = await axios.post(
@@ -53,7 +59,7 @@ async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
         messages: [
           {
             type: 'text',
-            text: `有票喔！幫您列出資訊如下 (最多10筆)\n${availableTicketInfo}`,
+            text: replyText,
           },
         ],
       },

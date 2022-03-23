@@ -17,6 +17,10 @@
 - 列出最時間最接近且最便宜的票 (sql 排序先排時間在排價格)
 - 可以大約 1hr 檢查一次
 
+### 搶票
+
+- 只有高鐵官網可以這樣做
+
 ### 使用說明
 
 - 告訴 user 如果要訂票、關注車票等等，文字格式是什麼
@@ -29,3 +33,6 @@
 - docker log 刪除
 - logger
 - redis using gcp like memorystore
+- 在撈出 db 資料同時，redis 的資料被刪掉以致讀不到資料，要解決
+- 排序可再加上依照乘車時間長短排序
+- 用 [line flex message](https://developers.line.biz/en/docs/messaging-api/using-flex-messages/)
