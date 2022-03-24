@@ -1,11 +1,8 @@
 import puppeteer from 'puppeteer';
 import { v4 as uuidv4 } from 'uuid';
-
 import constants from './constants';
 import config from './config';
 import ticketRepo from './repository/ticket';
-
-// import Ticket from './ticket';
 
 async function runPuppeteer(pgPool, redisClient) {
   // 1. puppeteer FATAL:zygote_host_impl_linux.cc(191)] Check failed:
@@ -19,7 +16,9 @@ async function runPuppeteer(pgPool, redisClient) {
 
   page.on('console', (msg) => console.log(msg.text()));
 
-  await page.goto('https://www.latebird.co/thsr_tickets');
+  await page.goto('https://www.latebird.co/thsr_tickets', {
+    timeout: 0,
+  });
 
   // get data and insert to redis
   const rawTickets = await page.evaluate((csts) => {
