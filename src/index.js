@@ -28,6 +28,16 @@ app.post('/webhook', (req, res) => {
 
 app.listen(3000, () => console.log('app listening on port 3000!'));
 
+process.on('uncaughtException', (error) => {
+  console.log('uncaughtException');
+  console.log(error);
+});
+
+process.on('unhandledRejection', (reason, p) => {
+  console.log('unhandledRejection');
+  console.log(reason, p);
+});
+
 const sleep = promisify(setTimeout);
 while (true) {
   runPuppeteer(pgPool, redisClient);
