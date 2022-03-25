@@ -5,5 +5,6 @@ export default {
     STOCK_INDEX: 3,
     PRICE_INDEX: 5,
     DISCOUNT_INDEX: 6,
+    DETAIL_INDEX: 8,
   },
 };

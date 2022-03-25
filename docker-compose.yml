@@ -7,7 +7,6 @@ services:
       - "9229:9229"
     volumes:
       - ./src:/app/src
-      - ./downloads:/home/pptruser/Downloads
       - ./migrations:/app/migrations
       - ./package.json:/app/package.json
       - ./package-lock.json:/app/package-lock.json

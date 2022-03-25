@@ -64,6 +64,9 @@ async function runPuppeteer(pgPool, redisClient) {
           case csts.LATEBIRD.DISCOUNT_INDEX:
             ticketObj.discount = columnText;
             break;
+          case csts.LATEBIRD.DETAIL_INDEX:
+            ticketObj.detailUrl = column.querySelector('a').href;
+            break;
           default:
             break;
         }
