@@ -22,7 +22,7 @@ export default function generateLineContainerJson(ticketObj) {
       aspectMode: 'cover',
       action: {
         type: 'uri',
-        uri: 'http://linecorp.com/',
+        uri: ticketObj.detailUrl,
       },
     },
     body: {

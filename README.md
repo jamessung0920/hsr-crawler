@@ -36,4 +36,4 @@
 - 在撈出 db 資料同時，redis 的資料被刪掉以致讀不到資料，要解決
 - 排序可再加上依照乘車時間長短排序
 - 可給天氣預報讓 user 參考要搭哪班比較好
-- 用 [line flex message](https://developers.line.biz/en/docs/messaging-api/using-flex-messages/)
+- ~~用 [line flex message](https://developers.line.biz/en/docs/messaging-api/using-flex-messages/)~~
