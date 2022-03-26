@@ -10,7 +10,7 @@
  * @param {string} ticketObj.detailUrl ex: https://www.xyzabc123.co/
  * @returns
  */
-export default function generateLineContainerJson(ticketObj) {
+export default function generateLineBubbleContainerJson(ticketObj) {
   // reference: https://developers.line.biz/flex-simulator/
   return {
     type: 'bubble',

@@ -1,7 +1,7 @@
 import axios from 'axios';
-import config from '../config';
 import getUserExpectedTickets from './ticketResponse';
-
+import config from '../config';
+import instruction from '../utils/instructionGenerator';
 /** example request body
 {
   destination: 'jwioefjiwoefjwioefjewiofjweifoj',
@@ -31,12 +31,16 @@ async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
       let messageObjects;
       if (userInput === '使用說明') {
         console.log('使用說明');
+        messageObjects = instruction.getAllInstruction();
       } else if (userInput === '訂票') {
         console.log('訂票');
+        messageObjects = instruction.getBookStepInstruction();
       } else if (userInput === '搶票') {
         console.log('搶票');
+        messageObjects = instruction.getGrabStepInstruction();
       } else if (userInput === '關注') {
         console.log('關注');
+        messageObjects = instruction.getFollowStepInstruction();
       } else {
         console.log('票');
         messageObjects = await getUserExpectedTickets(

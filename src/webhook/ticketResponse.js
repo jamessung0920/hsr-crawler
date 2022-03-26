@@ -1,6 +1,6 @@
 import config from '../config';
 import ticketRepo from '../repository/ticket';
-import generateLineContainerJson from '../utils/containerJsonGenerator';
+import generateLineBubbleContainerJson from '../utils/bubbleContainerJsonGenerator';
 
 export default async function getUserExpectedTickets(
   userInput,
@@ -35,7 +35,7 @@ export default async function getUserExpectedTickets(
         // console.log(rawTicket);
         const rawTicketObj = JSON.parse(rawTicket);
         containerJsonTicketsForResponse.push(
-          generateLineContainerJson(rawTicketObj),
+          generateLineBubbleContainerJson(rawTicketObj),
         );
       }
       replyText = `有票喔！幫您列出資訊如下 (最多${config.webhook.line.showTicketCount}筆)`;
