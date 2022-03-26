@@ -24,13 +24,14 @@ app.use(express.json());
 
 app.post('/webhook', (req, res) => {
   handleLineWebhook(req, pgPool, redisClient);
+  res.sendStatus(200);
 });
 
 app.listen(3000, () => console.log('app listening on port 3000!'));
 
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', (err) => {
   console.log('uncaughtException');
-  console.log(error);
+  console.log(err);
 });
 
 process.on('unhandledRejection', (reason, p) => {

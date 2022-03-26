@@ -91,7 +91,7 @@ async function runPuppeteer(pgPool, redisClient) {
         NX: true,
       });
     }),
-  ).catch((e) => console.error(e));
+  ).catch((err) => console.error(err));
 }
 
 const ticketDiscountAndPercentOffMapping = {

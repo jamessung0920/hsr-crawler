@@ -1,26 +1,13 @@
-import axios from 'axios';
-import config from './config';
-import ticketRepo from './repository/ticket';
-import generateLineContainerJson from './utils/containerJsonGenerator';
+import config from '../config';
+import ticketRepo from '../repository/ticket';
+import generateLineContainerJson from '../utils/containerJsonGenerator';
 
-/** example request body
-{
-  destination: 'jwioefjiwoefjwioefjewiofjweifoj',
-  events: [
-    {
-      type: 'message',
-      message: { type: 'text', id: '15692615108402', text: '左營-台北 2022-03-20 6:00 1張' },
-      timestamp: 1646469833446,
-      source: { type: 'user', userId: 'jiowefjowejfiowefjoweifewjif' },
-      replyToken: 'ojweifjewiofjweifojewfoiwefj',
-      mode: 'active',
-    },
-  ],
-}
-*/
-async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
-  const { message, replyToken } = reqBody.events[0];
-  const userExpectedTicketsInfo = message.text.split(' ');
+export default async function getUserExpectedTickets(
+  userInput,
+  pgPool,
+  redisClient,
+) {
+  const userExpectedTicketsInfo = userInput.split(' ');
   const expectedStationPair = userExpectedTicketsInfo[0];
   const expectedDepartureAfter = new Date(
     `${userExpectedTicketsInfo[1]} ${userExpectedTicketsInfo[2]} UTC+8`,
@@ -30,7 +17,7 @@ async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
     10,
   );
   try {
-    const tickets = await ticketRepo.getUserExpectedTickets(
+    const tickets = await ticketRepo.getTickets(
       pgPool,
       expectedStationPair,
       expectedDepartureAfter,
@@ -57,14 +44,14 @@ async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
       replyText = '沒有找到符合的票喔！';
     }
 
-    const bodyMessageObjects = [
+    const messageObjects = [
       {
         type: 'text',
         text: replyText,
       },
     ];
     if (hasTicket) {
-      bodyMessageObjects.push({
+      messageObjects.push({
         type: 'flex',
         altText: 'this is a flex message',
         contents: {
@@ -73,24 +60,9 @@ async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
         },
       });
     }
-
-    const res = await axios.post(
-      'https://api.line.me/v2/bot/message/reply',
-      {
-        replyToken,
-        messages: bodyMessageObjects,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${config.webhook.line.channelAccessToken}`,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-    // console.log(res);
-  } catch (error) {
-    console.error(error);
+    return messageObjects;
+  } catch (err) {
+    console.error(err);
+    throw err;
   }
 }
-
-export default handleLineWebhook;

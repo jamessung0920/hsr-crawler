@@ -1,9 +1,4 @@
-async function getUserExpectedTickets(
-  pgPool,
-  stationPair,
-  departureAfter,
-  purchaseCount,
-) {
+async function getTickets(pgPool, stationPair, departureAfter, purchaseCount) {
   const tickets = await pgPool.query(
     `
       SELECT * FROM tickets
@@ -43,7 +38,7 @@ async function deleteTicketById(pgPool, id) {
 }
 
 export default {
-  getUserExpectedTickets,
+  getTickets,
   insertTicket,
   deleteTicketById,
 };
