@@ -28,13 +28,17 @@ async function insertTicket(pgPool, id, ticket) {
 }
 
 async function deleteTicketById(pgPool, id) {
-  const res = pgPool.query(
-    `
+  try {
+    const res = await pgPool.query(
+      `
       DELETE FROM tickets
       WHERE id = $1
     `,
-    [id],
-  );
+      [id],
+    );
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 export default {

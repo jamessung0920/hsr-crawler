@@ -7,4 +7,10 @@ export default {
     DISCOUNT_INDEX: 6,
     DETAIL_INDEX: 8,
   },
+  RICH_MENU_ACTION: {
+    INSTRUCTION: '使用說明',
+    BOOK: '訂票',
+    GRAB: '搶票',
+    FOLLOW: '關注',
+  },
 };

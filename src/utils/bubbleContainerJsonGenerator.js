@@ -8,10 +8,24 @@
  * @param {string} ticketObj.price ex: 965
  * @param {string} ticketObj.discount ex: 65折
  * @param {string} ticketObj.detailUrl ex: https://www.xyzabc123.co/
+ * @param {boolean} isBookStep
  * @returns
  */
-export default function generateLineBubbleContainerJson(ticketObj) {
+export default function generateLineBubbleContainerJson(ticketObj, isBookStep) {
   // reference: https://developers.line.biz/flex-simulator/
+  let websiteContent;
+  if (isBookStep) {
+    websiteContent = {
+      type: 'button',
+      style: 'link',
+      height: 'sm',
+      action: {
+        type: 'uri',
+        label: 'WEBSITE',
+        uri: ticketObj.detailUrl,
+      },
+    };
+  }
   return {
     type: 'bubble',
     hero: {
@@ -20,10 +34,6 @@ export default function generateLineBubbleContainerJson(ticketObj) {
       size: 'full',
       aspectRatio: '20:13',
       aspectMode: 'cover',
-      action: {
-        type: 'uri',
-        uri: ticketObj.detailUrl,
-      },
     },
     body: {
       type: 'box',
@@ -182,23 +192,14 @@ export default function generateLineBubbleContainerJson(ticketObj) {
       layout: 'vertical',
       spacing: 'sm',
       contents: [
-        {
-          type: 'button',
-          style: 'link',
-          height: 'sm',
-          action: {
-            type: 'uri',
-            label: 'WEBSITE',
-            uri: ticketObj.detailUrl,
-          },
-        },
+        websiteContent,
         {
           type: 'box',
           layout: 'vertical',
           contents: [],
           margin: 'sm',
         },
-      ],
+      ].filter(Boolean),
       flex: 0,
     },
   };

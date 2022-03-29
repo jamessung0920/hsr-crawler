@@ -38,3 +38,4 @@
 - 可給天氣預報讓 user 參考要搭哪班比較好
 - ~~用 [line flex message](https://developers.line.biz/en/docs/messaging-api/using-flex-messages/)~~
 - webhook response status 不是 2xx 時會 redeliver，因此如果有像是 network error 相關的 error 可以回傳非 2xx，並等下一次打進來 ([reference](https://developers.line.biz/en/news/2022/03/07/pre-release-webhook-redelivery/))
+- promise all catch 沒有 catch 到 error
