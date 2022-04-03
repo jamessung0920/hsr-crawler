@@ -9,8 +9,7 @@ export default {
   },
   RICH_MENU_ACTION: {
     INSTRUCTION: '使用說明',
-    BOOK: '訂票',
-    GRAB: '搶票',
-    FOLLOW: '關注',
+    SEARCH: '查詢車票',
+    FOLLOW: '關注車票',
   },
 };

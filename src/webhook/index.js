@@ -32,23 +32,18 @@ async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
       const { userId } = event.source;
       let messageObjects;
       switch (userInput) {
-        case constants.RICH_MENU_ACTION.BOOK: {
-          console.log('訂票');
-          const userActionCache = { isBookStep: true };
+        case constants.RICH_MENU_ACTION.SEARCH: {
+          console.log('查詢車票');
+          const userActionCache = { isSearchStep: true };
           await redisClient.set(userId, JSON.stringify(userActionCache), {
             EX: config.redis.expireTime,
             NX: true,
           });
-          messageObjects = instruction.getBookStepInstruction();
-          break;
-        }
-        case constants.RICH_MENU_ACTION.GRAB: {
-          console.log('搶票');
-          messageObjects = instruction.getGrabStepInstruction();
+          messageObjects = instruction.getSearchStepInstruction();
           break;
         }
         case constants.RICH_MENU_ACTION.FOLLOW: {
-          console.log('關注');
+          console.log('關注車票');
           messageObjects = instruction.getFollowStepInstruction();
           break;
         }
@@ -60,12 +55,12 @@ async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
         default: {
           console.log('票');
           const userActionCache = await redisClient.get(userId);
-          const isBookStep = userActionCache
-            ? JSON.parse(userActionCache).isBookStep
+          const isSearchStep = userActionCache
+            ? JSON.parse(userActionCache).isSearchStep
             : false;
           messageObjects = await getUserExpectedTickets(
             userInput,
-            isBookStep,
+            isSearchStep,
             pgPool,
             redisClient,
           );
@@ -73,7 +68,7 @@ async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
         }
       }
 
-      if (userInput !== constants.RICH_MENU_ACTION.BOOK) {
+      if (userInput !== constants.RICH_MENU_ACTION.SEARCH) {
         await redisClient.del(userId);
       }
 

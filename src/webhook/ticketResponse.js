@@ -4,7 +4,7 @@ import generateLineBubbleContainerJson from '../utils/bubbleContainerJsonGenerat
 
 export default async function getUserExpectedTickets(
   userInput,
-  isBookStep,
+  isSearchStep,
   pgPool,
   redisClient,
 ) {
@@ -34,7 +34,7 @@ export default async function getUserExpectedTickets(
         const rawTicket = await redisClient.get(ticket.id);
         const rawTicketObj = JSON.parse(rawTicket);
         containerJsonTicketsForResponse.push(
-          generateLineBubbleContainerJson(rawTicketObj, isBookStep),
+          generateLineBubbleContainerJson(rawTicketObj, isSearchStep),
         );
       }
       replyText = `有票喔！幫您列出資訊如下 (最多${config.webhook.line.showTicketCount}筆)`;

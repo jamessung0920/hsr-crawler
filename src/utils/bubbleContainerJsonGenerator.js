@@ -8,13 +8,16 @@
  * @param {string} ticketObj.price ex: 965
  * @param {string} ticketObj.discount ex: 65折
  * @param {string} ticketObj.detailUrl ex: https://www.xyzabc123.co/
- * @param {boolean} isBookStep
+ * @param {boolean} isSearchStep
  * @returns
  */
-export default function generateLineBubbleContainerJson(ticketObj, isBookStep) {
+export default function generateLineBubbleContainerJson(
+  ticketObj,
+  isSearchStep,
+) {
   // reference: https://developers.line.biz/flex-simulator/
   let websiteContent;
-  if (isBookStep) {
+  if (isSearchStep) {
     websiteContent = {
       type: 'button',
       style: 'link',

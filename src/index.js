@@ -1,5 +1,6 @@
 import { promisify } from 'util';
 import express from 'express';
+import isTicketId from 'validator/lib/isUUID';
 import config from './config';
 import runPuppeteer from './puppeteer';
 import handleLineWebhook from './webhook';
@@ -15,7 +16,9 @@ const redisClient = await initRedis();
 const redisKeyEventClient = redisClient.duplicate();
 await redisKeyEventClient.connect();
 await redisKeyEventClient.subscribe('__keyevent@0__:expired', async (key) => {
-  ticketRepo.deleteTicketById(pgPool, key);
+  if (isTicketId(key, 4)) {
+    ticketRepo.deleteTicketById(pgPool, key);
+  }
 });
 
 const app = express();
