@@ -102,6 +102,8 @@ const ticketDiscountAndPercentOffMapping = {
   '65折': 35,
   早鳥65折: 35,
   原價: 0,
+  // not sure its discount, so set to 0
+  團體票: 0,
 };
 
 // transform ticket data to fit database schema
