@@ -1,5 +1,6 @@
 import { promisify } from 'util';
 import express from 'express';
+import ProxyChain from 'proxy-chain';
 import isTicketId from 'validator/lib/isUUID';
 import config from './config';
 import runPuppeteer from './puppeteer';
@@ -31,6 +32,49 @@ app.post('/webhook', (req, res) => {
 });
 
 app.listen(3000, () => console.log('app listening on port 3000!'));
+
+const { port, upstreamProxyIps, upstreamProxyUsername, upstreamProxyPassword } =
+  config.proxy;
+const ipRotatorServer = new ProxyChain.Server({
+  port,
+  verbose: true,
+  prepareRequestFunction: ({
+    request,
+    username,
+    password,
+    hostname,
+    port,
+    isHttp,
+    connectionId,
+  }) => {
+    const availableProxyIps = upstreamProxyIps.split(', ');
+    const currentUpstreamProxyIp =
+      availableProxyIps[(availableProxyIps.length * Math.random()) | 0];
+    console.log(currentUpstreamProxyIp);
+
+    return {
+      requestAuthentication: false,
+      upstreamProxyUrl: `http://${upstreamProxyUsername}:${upstreamProxyPassword}@${currentUpstreamProxyIp}:3128`,
+      failMsg: 'Bad username or password, please try again.',
+    };
+  },
+});
+
+ipRotatorServer.listen(() => {
+  console.log(`Proxy server is listening on port ${port}`);
+});
+
+// Emitted when HTTP connection is closed
+ipRotatorServer.on('connectionClosed', ({ connectionId, stats }) => {
+  console.log(`Connection ${connectionId} closed`);
+  console.dir(stats);
+});
+
+// Emitted when HTTP request fails
+ipRotatorServer.on('requestFailed', ({ request, error }) => {
+  console.log(`Request ${request.url} failed`);
+  console.error(error);
+});
 
 process.on('uncaughtException', (err) => {
   console.log('uncaughtException');

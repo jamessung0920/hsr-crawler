@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer';
 import { v4 as uuidv4 } from 'uuid';
+import randomUseragent from 'random-useragent';
 import constants from './constants';
 import config from './config';
 import ticketRepo from './repository/ticket';
@@ -10,15 +11,32 @@ async function runPuppeteer(pgPool, redisClient) {
   // 2. be careful with --no-sandbox (https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#setting-up-chrome-linux-sandbox)
   const browser = await puppeteer.launch({
     headless: true,
-    args: ['--no-sandbox'],
+    args: ['--no-sandbox', '--proxy-server=http://web-and-crawler:8080'],
   }); // manual add executablePath example: { executablePath: '/usr/bin/chromium-browser' }
-  const page = await browser.newPage();
+  const page = (await browser.pages())[0];
 
   page.on('console', (msg) => console.log(msg.text()));
 
+  const DEFAULT_USER_AGENT =
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.79 Safari/537.36';
+  const userAgent = randomUseragent.getRandom();
+  const UA = userAgent || DEFAULT_USER_AGENT;
+
+  await page.setViewport({
+    width: 1920 + Math.floor(Math.random() * 100),
+    height: 3000 + Math.floor(Math.random() * 100),
+    deviceScaleFactor: 1,
+    hasTouch: false,
+    isLandscape: false,
+    isMobile: false,
+  });
+  await page.setUserAgent(UA);
+  await page.setJavaScriptEnabled(true);
   await page.goto('https://www.latebird.co/thsr_tickets', {
     timeout: 0,
   });
+
+  await page.waitForTimeout(3000);
 
   // get data and insert to redis
   const rawTickets = await page.evaluate((csts) => {

@@ -19,4 +19,10 @@ export default {
   puppeteer: {
     crawlPeriod: process.env.CRAWL_PERIOD,
   },
+  proxy: {
+    port: process.env.PROXY_PORT,
+    upstreamProxyIps: process.env.UPSTREAM_PROXY_IPS,
+    upstreamProxyUsername: process.env.UPSTREAM_PROXY_USERNAME,
+    upstreamProxyPassword: process.env.UPSTREAM_PROXY_PASSWORD,
+  },
 };
