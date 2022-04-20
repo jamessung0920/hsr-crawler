@@ -1,9 +1,12 @@
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { v4 as uuidv4 } from 'uuid';
 import randomUseragent from 'random-useragent';
 import constants from './constants';
 import config from './config';
 import ticketRepo from './repository/ticket';
+
+puppeteer.use(StealthPlugin());
 
 async function runPuppeteer(pgPool, redisClient) {
   // 1. puppeteer FATAL:zygote_host_impl_linux.cc(191)] Check failed:
@@ -11,7 +14,10 @@ async function runPuppeteer(pgPool, redisClient) {
   // 2. be careful with --no-sandbox (https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#setting-up-chrome-linux-sandbox)
   const browser = await puppeteer.launch({
     headless: true,
-    args: ['--no-sandbox', '--proxy-server=http://web-and-crawler:8080'],
+    args: [
+      '--no-sandbox',
+      `--proxy-server=http://web-and-crawler:${config.proxy.port}`,
+    ],
   }); // manual add executablePath example: { executablePath: '/usr/bin/chromium-browser' }
   const page = (await browser.pages())[0];
 
@@ -36,7 +42,7 @@ async function runPuppeteer(pgPool, redisClient) {
     timeout: 0,
   });
 
-  await page.waitForTimeout(3000);
+  await page.waitForTimeout(2000 + Math.floor(Math.random() * 3000));
 
   // get data and insert to redis
   const rawTickets = await page.evaluate((csts) => {

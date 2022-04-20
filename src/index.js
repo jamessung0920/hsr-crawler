@@ -1,4 +1,3 @@
-import { promisify } from 'util';
 import express from 'express';
 import ProxyChain from 'proxy-chain';
 import isTicketId from 'validator/lib/isUUID';
@@ -9,6 +8,7 @@ import initPostgres from './postgres';
 import initRedis from './redis';
 import ticketRepo from './repository/ticket';
 
+// setup db and redis server
 const pgPool = initPostgres();
 
 const redisClient = await initRedis();
@@ -22,17 +22,7 @@ await redisKeyEventClient.subscribe('__keyevent@0__:expired', async (key) => {
   }
 });
 
-const app = express();
-
-app.use(express.json());
-
-app.post('/webhook', (req, res) => {
-  handleLineWebhook(req, pgPool, redisClient);
-  res.sendStatus(200);
-});
-
-app.listen(3000, () => console.log('app listening on port 3000!'));
-
+// ip rotator server setup part
 const { port, upstreamProxyIps, upstreamProxyUsername, upstreamProxyPassword } =
   config.proxy;
 const ipRotatorServer = new ProxyChain.Server({
@@ -64,18 +54,29 @@ ipRotatorServer.listen(() => {
   console.log(`Proxy server is listening on port ${port}`);
 });
 
-// Emitted when HTTP connection is closed
 ipRotatorServer.on('connectionClosed', ({ connectionId, stats }) => {
-  console.log(`Connection ${connectionId} closed`);
+  console.log(`HTTP Connection ${connectionId} closed`);
   console.dir(stats);
 });
 
-// Emitted when HTTP request fails
 ipRotatorServer.on('requestFailed', ({ request, error }) => {
-  console.log(`Request ${request.url} failed`);
+  console.log(`HTTP Request ${request.url} failed`);
   console.error(error);
 });
 
+// setup webhook
+const app = express();
+
+app.use(express.json());
+
+app.post('/webhook', (req, res) => {
+  handleLineWebhook(req, pgPool, redisClient);
+  res.sendStatus(200);
+});
+
+app.listen(3000, () => console.log('app listening on port 3000!'));
+
+// global event
 process.on('uncaughtException', (err) => {
   console.log('uncaughtException');
   console.log(err);
@@ -86,8 +87,9 @@ process.on('unhandledRejection', (reason, p) => {
   console.log(reason, p);
 });
 
-const sleep = promisify(setTimeout);
-while (true) {
+// run crawler
+const crawlPerSecond = parseInt(config.puppeteer.crawlPeriod, 10) || 600;
+runPuppeteer(pgPool, redisClient);
+setInterval(() => {
   runPuppeteer(pgPool, redisClient);
-  await sleep(config.puppeteer.crawlPeriod * 1000);
-}
+}, crawlPerSecond * 1000);
