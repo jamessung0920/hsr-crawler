@@ -1,5 +1,4 @@
 import express from 'express';
-import ProxyChain from 'proxy-chain';
 import isTicketId from 'validator/lib/isUUID';
 import config from './config';
 import runPuppeteer from './puppeteer';
@@ -20,48 +19,6 @@ await redisKeyEventClient.subscribe('__keyevent@0__:expired', async (key) => {
   if (isTicketId(key, 4)) {
     ticketRepo.deleteTicketById(pgPool, key);
   }
-});
-
-// ip rotator server setup part
-const { port, upstreamProxyIps, upstreamProxyUsername, upstreamProxyPassword } =
-  config.proxy;
-const ipRotatorServer = new ProxyChain.Server({
-  port,
-  verbose: true,
-  prepareRequestFunction: ({
-    request,
-    username,
-    password,
-    hostname,
-    port,
-    isHttp,
-    connectionId,
-  }) => {
-    const availableProxyIps = upstreamProxyIps.split(', ');
-    const currentUpstreamProxyIp =
-      availableProxyIps[(availableProxyIps.length * Math.random()) | 0];
-    console.log(currentUpstreamProxyIp);
-
-    return {
-      requestAuthentication: false,
-      upstreamProxyUrl: `http://${upstreamProxyUsername}:${upstreamProxyPassword}@${currentUpstreamProxyIp}:3128`,
-      failMsg: 'Bad username or password, please try again.',
-    };
-  },
-});
-
-ipRotatorServer.listen(() => {
-  console.log(`Proxy server is listening on port ${port}`);
-});
-
-ipRotatorServer.on('connectionClosed', ({ connectionId, stats }) => {
-  console.log(`HTTP Connection ${connectionId} closed`);
-  console.dir(stats);
-});
-
-ipRotatorServer.on('requestFailed', ({ request, error }) => {
-  console.log(`HTTP Request ${request.url} failed`);
-  console.error(error);
 });
 
 // setup webhook

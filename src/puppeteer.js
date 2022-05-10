@@ -9,15 +9,19 @@ import ticketRepo from './repository/ticket';
 puppeteer.use(StealthPlugin());
 
 async function runPuppeteer(pgPool, redisClient) {
+  const {
+    ip: proxyIp,
+    port: proxyPort,
+    username: proxyUsername,
+    password: proxyPassword,
+  } = config.upstreamProxy;
+  const { expireTime } = config.redis;
   // 1. puppeteer FATAL:zygote_host_impl_linux.cc(191)] Check failed:
   // can check reference (https://github.com/Zenika/alpine-chrome/issues/152, https://github.com/Zenika/alpine-chrome/issues/33)
   // 2. be careful with --no-sandbox (https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#setting-up-chrome-linux-sandbox)
   const browser = await puppeteer.launch({
     headless: true,
-    args: [
-      '--no-sandbox',
-      `--proxy-server=http://web-and-crawler:${config.proxy.port}`,
-    ],
+    args: ['--no-sandbox', `--proxy-server=http://${proxyIp}:${proxyPort}`],
   }); // manual add executablePath example: { executablePath: '/usr/bin/chromium-browser' }
   const page = (await browser.pages())[0];
 
@@ -29,8 +33,8 @@ async function runPuppeteer(pgPool, redisClient) {
   const UA = userAgent || DEFAULT_USER_AGENT;
 
   await page.setViewport({
-    width: 1920 + Math.floor(Math.random() * 100),
-    height: 3000 + Math.floor(Math.random() * 100),
+    width: 2800 + Math.floor(Math.random() * 200),
+    height: 1800 + Math.floor(Math.random() * 120),
     deviceScaleFactor: 1,
     hasTouch: false,
     isLandscape: false,
@@ -38,6 +42,7 @@ async function runPuppeteer(pgPool, redisClient) {
   });
   await page.setUserAgent(UA);
   await page.setJavaScriptEnabled(true);
+  await page.authenticate({ username: proxyUsername, password: proxyPassword });
   await page.goto('https://www.latebird.co/thsr_tickets', {
     timeout: 0,
   });
@@ -110,10 +115,7 @@ async function runPuppeteer(pgPool, redisClient) {
 
       ticketRepo.insertTicket(pgPool, id, ticketEntity);
 
-      redisClient.set(id, JSON.stringify(ticket), {
-        EX: config.redis.expireTime,
-        NX: true,
-      });
+      redisClient.set(id, JSON.stringify(ticket), { EX: expireTime, NX: true });
     }),
   ).catch((err) => console.error(err));
 }
