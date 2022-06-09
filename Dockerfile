@@ -16,6 +16,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 COPY package*.json ./
 COPY migrations migrations
+COPY cookiesTemplate.json cookies.json
 
 RUN npm ci
 
@@ -25,7 +26,9 @@ RUN addgroup -S pptruser && adduser -S -G pptruser pptruser \
     && chown -R pptruser:pptruser ./node_modules \
     && chown -R pptruser:pptruser ./package.json \
     && chown -R pptruser:pptruser ./package-lock.json \
-    && chown -R pptruser:pptruser ./migrations
+    && chown -R pptruser:pptruser ./migrations \
+    && chown -R pptruser:pptruser ./cookies.json \
+    && mkdir -p ./downloads && chown -R pptruser:pptruser ./downloads
 
 # Run everything after as non-privileged user.
 USER pptruser

@@ -12,10 +12,10 @@ async function getTickets(pgPool, stationPair, departureAfter, purchaseCount) {
 }
 
 async function insertTicket(pgPool, id, ticket) {
-  const res = pgPool.query(
+  const res = await pgPool.query(
     `
-      INSERT INTO tickets
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO tickets (id, station_pair, departure_time, discount, stock, origin)
+      VALUES ($1, $2, $3, $4, $5, $6)
     `,
     [
       id,
@@ -23,6 +23,7 @@ async function insertTicket(pgPool, id, ticket) {
       ticket.departureTime,
       ticket.discount,
       ticket.stock,
+      ticket.origin,
     ],
   );
 }

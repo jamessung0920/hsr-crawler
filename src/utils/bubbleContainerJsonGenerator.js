@@ -8,6 +8,7 @@
  * @param {string} ticketObj.price ex: 965
  * @param {string} ticketObj.discount ex: 65折
  * @param {string} ticketObj.detailUrl ex: https://www.xyzabc123.co/
+ * @param {string} ticketObj.origin ex: 晚鳥票|高鐵官網
  * @param {boolean} isSearchStep
  * @returns
  */
@@ -44,7 +45,7 @@ export default function generateLineBubbleContainerJson(
       contents: [
         {
           type: 'text',
-          text: '晚鳥票',
+          text: ticketObj.origin,
           weight: 'bold',
           size: 'xl',
         },

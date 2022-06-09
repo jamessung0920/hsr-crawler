@@ -9,6 +9,7 @@ export default {
   redis: {
     host: process.env.REDIS_HOST,
     expireTime: process.env.REDIS_EXPIRE_TIME,
+    expireTimeOfficial: process.env.REDIS_EXPIRE_TIME_OFFICIAL,
   },
   webhook: {
     line: {
@@ -18,11 +19,15 @@ export default {
   },
   puppeteer: {
     crawlPeriod: process.env.CRAWL_PERIOD,
+    crawlDaysAfterToday: process.env.CRAWL_DAYS_AFTER_TODAY,
   },
   upstreamProxy: {
     port: process.env.UPSTREAM_PROXY_PORT,
     ip: process.env.UPSTREAM_PROXY_IP,
     username: process.env.UPSTREAM_PROXY_USERNAME,
     password: process.env.UPSTREAM_PROXY_PASSWORD,
+  },
+  captchaSolver: {
+    apiUrl: process.env.CAPTCHA_SOLVER_API_URL,
   },
 };

@@ -1,5 +1,5 @@
 {
-  "name": "thsr-crawler",
+  "name": "hsr-crawler",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node --es-module-specifier-resolution=node src/index.js",
-    "debug": "nodemon --es-module-specifier-resolution=node --inspect=0.0.0.0 src/index.js",
+    "debug": "nodemon --watch src --es-module-specifier-resolution=node --inspect=0.0.0.0 src/index.js",
     "migrate": "node-pg-migrate"
   },
   "author": "",
@@ -15,6 +15,7 @@
   "dependencies": {
     "axios": "^0.26.0",
     "express": "^4.17.3",
+    "form-data": "^4.0.0",
     "node-pg-migrate": "^6.2.1",
     "pg": "^8.7.3",
     "pg-pool": "^3.5.1",

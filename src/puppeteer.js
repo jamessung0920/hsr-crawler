@@ -101,6 +101,7 @@ async function runPuppeteer(pgPool, redisClient) {
         }
       }
       ticketObj.date = currentDate;
+      ticketObj.origin = csts.TICKET_ORIGIN.LATEBIRD;
       tickets.push(ticketObj);
     }
     return tickets;
@@ -141,6 +142,7 @@ function transformTicketData(ticket) {
     departureTime: new Date(`${ticketDate} ${ticketDepartureTime} UTC+8`),
     discount: ticketDiscountAndPercentOffMapping[ticket.discount],
     stock: parseInt(ticket.stock, 10),
+    origin: 'latebird',
   };
 }
 
