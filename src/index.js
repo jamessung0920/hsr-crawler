@@ -1,11 +1,16 @@
+import util from 'util';
 import express from 'express';
 import isTicketId from 'validator/lib/isUUID';
 import config from './config';
-import runPuppeteer from './puppeteer';
+// import runPuppeteer from './puppeteer';
+import runPuppeteer from './puppeteerOfficialAsync';
 import handleLineWebhook from './webhook';
 import initPostgres from './postgres';
 import initRedis from './redis';
 import ticketRepo from './repository/ticket';
+import getStationPairAndDateCombinations from './utils/getStationPairAndDateCombinations';
+
+const sleep = util.promisify(setTimeout);
 
 // setup db and redis server
 const pgPool = initPostgres();
@@ -46,7 +51,21 @@ process.on('unhandledRejection', (reason, p) => {
 
 // run crawler
 const crawlPerSecond = parseInt(config.puppeteer.crawlPeriod, 10) || 600;
-runPuppeteer(pgPool, redisClient);
-setInterval(() => {
-  runPuppeteer(pgPool, redisClient);
-}, crawlPerSecond * 1000);
+
+// official
+async function x() {
+  const stationPairAndDateCombinations = getStationPairAndDateCombinations();
+  for (const c of stationPairAndDateCombinations) {
+    console.log(c);
+    runPuppeteer(pgPool, redisClient, c);
+    await sleep(70 * 1000);
+  }
+}
+x();
+setInterval(x, 7200 * 1000);
+
+// latebird
+// runPuppeteer(pgPool, redisClient);
+// setInterval(() => {
+//   runPuppeteer(pgPool, redisClient);
+// }, crawlPerSecond * 1000);
