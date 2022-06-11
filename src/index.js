@@ -56,7 +56,6 @@ const crawlPerSecond = parseInt(config.puppeteer.crawlPeriod, 10) || 600;
 async function x() {
   const stationPairAndDateCombinations = getStationPairAndDateCombinations();
   for (const c of stationPairAndDateCombinations) {
-    console.log(c);
     runPuppeteer(pgPool, redisClient, c);
     await sleep(120 * 1000);
   }

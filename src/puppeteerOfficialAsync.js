@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import crawlSiteData from './crawlSiteData';
 import config from './config';
 import ticketRepo from './repository/ticket';
+import constants from './constants';
 
 puppeteer.use(StealthPlugin());
 
@@ -12,6 +13,8 @@ async function runPuppeteer(
   redisClient,
   stationPairAndDateCombination,
 ) {
+  if (!isGoodTimeToCrawl()) return;
+
   const now = Date.now();
   console.time(`===== runPuppeteer-${now} =====`);
   const { ip: proxyIp, port: proxyPort } = config.upstreamProxy;
@@ -80,6 +83,17 @@ function transformTicketData(ticket) {
     stock: parseInt(ticket.stock, 10),
     origin: 'official',
   };
+}
+
+// only crawl on AM8:00 to AM12:00
+function isGoodTimeToCrawl() {
+  const { TIMEZONE_OFFSET: tzOffset } = constants.OFFICIAL;
+  const date = new Date();
+  const timezoneDiff = tzOffset * 60 + date.getTimezoneOffset();
+  date.setTime(date.getTime() + timezoneDiff * 60 * 1000);
+
+  if (date.getHours() >= 0 && date.getHours() <= 8) return false;
+  return true;
 }
 
 export default runPuppeteer;
