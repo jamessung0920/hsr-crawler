@@ -10,9 +10,11 @@ async function retry(fn, retryDelay = 1000, numRetries = 3) {
       await fn();
       console.log(222);
       return;
-    } catch (e) {
-      console.log(e);
-      if (i === numRetries) throw e;
+    } catch (err) {
+      console.error('======================== error ========================');
+      console.error(err);
+      console.error('=======================================================');
+      if (i === numRetries) throw err;
       await delay(retryDelay);
       retryDelay = retryDelay * 2;
     }

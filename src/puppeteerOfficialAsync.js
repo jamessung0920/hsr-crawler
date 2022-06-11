@@ -35,8 +35,10 @@ async function runPuppeteer(
 
     tickets = await crawlSiteData(browser, ...stationPairAndDateCombination);
   } catch (err) {
-    console.log('catch err');
+    console.error('======================== error ========================');
+    console.error('catch err');
     console.error(err);
+    console.error('=======================================================');
   } finally {
     console.log('close browser');
     await browser?.close();

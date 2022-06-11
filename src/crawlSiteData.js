@@ -27,13 +27,7 @@ async function crawlSiteData(
     DESTINATION_STATION_DROPDOWN_VALUE_MAPPING: desStnToValue,
   } = constants.OFFICIAL;
   const ticketOrigin = constants.TICKET_ORIGIN.OFFICIAL;
-  const [departureYear, , departureDay] = depatureDate.split('-');
-  const departureMonthName = new Date(depatureDate).toLocaleString('en-us', {
-    month: 'long',
-  });
-  const formattedDepartureDate = `${departureMonthName} ${String(
-    parseInt(departureDay, 10),
-  )}, ${departureYear}`;
+  const formattedDepartureDate = genFormattedDepartureDate(depatureDate);
   console.log(startStation, destinationStation, depatureDate);
   console.log(formattedDepartureDate);
 
@@ -72,7 +66,7 @@ async function crawlSiteData(
   // });
   await page.authenticate({ username: proxyUsername, password: proxyPassword });
   console.log('Visit site');
-  await retry(() => page.goto(websiteUrl, { timeout: 9000, referer }), 3000, 5);
+  await retry(() => page.goto(websiteUrl, { timeout: 9000, referer }), 2000, 5);
   console.log('Start get site data');
 
   await page.waitForTimeout(500 + Math.floor(Math.random() * 500));
@@ -93,13 +87,14 @@ async function crawlSiteData(
   );
 
   await page.waitForTimeout(2000 + Math.floor(Math.random() * 500));
-  await page.waitForSelector(
-    `.dayContainer span[aria-label="${formattedDepartureDate}"]`,
-  );
-  await page.$eval(
-    `.flatpickr-days span[aria-label="${formattedDepartureDate}"]`,
-    (span) => span.click(),
-  );
+  let depatureDateSltr = `.flatpickr-days span[aria-label="${formattedDepartureDate['en-us']}"]`;
+  await page
+    .$eval(depatureDateSltr, (span) => span.click())
+    .catch(async (err) => {
+      console.error(err.message);
+      depatureDateSltr = `.flatpickr-days span[aria-label="${formattedDepartureDate['zh-tw']}"]`;
+      await page.$eval(depatureDateSltr, (span) => span.click());
+    });
 
   await page.waitForTimeout(1500 + Math.floor(Math.random() * 500));
   await page.select('select[name="toTimeTable"]', '1201A');
@@ -221,6 +216,39 @@ async function renewCaptchaImg(page) {
     oriCaptchaImgSrc,
   );
   console.log('img changed');
+}
+
+function genFormattedDepartureDate(depatureDate) {
+  const [departureYear, departureMonth, departureDay] = depatureDate.split('-');
+  const departureDayInt = parseInt(departureDay, 10);
+  const getMonthName = (month, locale) => {
+    const monthMap = {
+      '01': { 'en-us': 'January', 'zh-tw': '一月' },
+      '02': { 'en-us': 'February', 'zh-tw': '二月' },
+      '03': { 'en-us': 'March', 'zh-tw': '三月' },
+      '04': { 'en-us': 'April', 'zh-tw': '四月' },
+      '05': { 'en-us': 'May', 'zh-tw': '五月' },
+      '06': { 'en-us': 'June', 'zh-tw': '六月' },
+      '07': { 'en-us': 'July', 'zh-tw': '七月' },
+      '08': { 'en-us': 'August', 'zh-tw': '八月' },
+      '09': { 'en-us': 'September', 'zh-tw': '九月' },
+      10: { 'en-us': 'October', 'zh-tw': '十月' },
+      11: { 'en-us': 'November', 'zh-tw': '十一月' },
+      12: { 'en-us': 'December', 'zh-tw': '十二月' },
+    };
+    return monthMap[month][locale];
+  };
+
+  return {
+    'en-us': `${getMonthName(
+      departureMonth,
+      'en-us',
+    )} ${departureDayInt}, ${departureYear}`,
+    'zh-tw': `${getMonthName(
+      departureMonth,
+      'zh-tw',
+    )} ${departureDayInt}, ${departureYear}`,
+  };
 }
 
 const stationPairTicketPriceMapping = {
