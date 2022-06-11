@@ -12,6 +12,8 @@ async function runPuppeteer(
   redisClient,
   stationPairAndDateCombination,
 ) {
+  const now = Date.now();
+  console.time(`===== runPuppeteer-${now} =====`);
   const { ip: proxyIp, port: proxyPort } = config.upstreamProxy;
   const { expireTimeOfficial } = config.redis;
   let browser;
@@ -58,6 +60,7 @@ async function runPuppeteer(
       ]);
     }),
   ).catch((err) => console.error(err));
+  console.timeEnd(`===== runPuppeteer-${now} =====`);
 }
 
 const ticketDiscountAndPercentOffMapping = {

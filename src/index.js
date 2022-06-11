@@ -58,11 +58,11 @@ async function x() {
   for (const c of stationPairAndDateCombinations) {
     console.log(c);
     runPuppeteer(pgPool, redisClient, c);
-    await sleep(70 * 1000);
+    await sleep(120 * 1000);
   }
 }
 x();
-setInterval(x, 7200 * 1000);
+setInterval(x, 10800 * 1000);
 
 // latebird
 // runPuppeteer(pgPool, redisClient);
