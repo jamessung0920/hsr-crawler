@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
@@ -9,6 +10,7 @@ import config from './config';
 import constants from './constants';
 
 const __filename = new URL(import.meta.url).pathname;
+const __dirname = path.dirname(__filename);
 
 /**
  *
@@ -26,14 +28,13 @@ async function crawlSiteData(
     START_STATION_DROPDOWN_VALUE_MAPPING: startStnToValue,
     DESTINATION_STATION_DROPDOWN_VALUE_MAPPING: desStnToValue,
   } = constants.OFFICIAL;
-  const ticketOrigin = constants.TICKET_ORIGIN.OFFICIAL;
   const formattedDepartureDate = genFormattedDepartureDate(depatureDate);
   console.log(startStation, destinationStation, depatureDate);
   console.log(formattedDepartureDate);
 
   const page = (await browser.pages())[0];
 
-  page.on('console', (msg) => console.log(msg.text()));
+  // page.on('console', (msg) => console.log(msg.text()));
 
   const websiteUrl = 'https://irs.thsrc.com.tw/IMINT/?locale=tw';
   const referer = 'https://www.thsrc.com.tw/';
@@ -47,6 +48,9 @@ async function crawlSiteData(
       'Wed%20May%2011%202022%2017:21:15%20GMT+0800%20(Taipei%20Standard%20Time)',
     url: websiteUrl,
   };
+  // const cookieFilePath = path.resolve(__dirname, '../cookies.json');
+  // const cookiesBuf = fs.readFileSync(cookieFilePath);
+  // const cookies = JSON.parse(cookiesBuf);
 
   await page.setViewport({
     width: 1800 + Math.floor(Math.random() * 200),
@@ -59,6 +63,10 @@ async function crawlSiteData(
   await page.setUserAgent(UA);
   await page.setJavaScriptEnabled(true);
   await page.setCookie(cookie);
+  // if (Array.isArray(cookies) && cookies.length > 0) {
+  //   console.log('set cookies');
+  //   await page.setCookie(...cookies);
+  // }
   // await page.setExtraHTTPHeaders({
   //   'Cache-Control': 'max-age=0',
   //   'Sec-Fetch-Site': 'same-site',
@@ -66,16 +74,27 @@ async function crawlSiteData(
   // });
   await page.authenticate({ username: proxyUsername, password: proxyPassword });
   console.log('Visit site');
-  await retry(() => page.goto(websiteUrl, { timeout: 9000, referer }), 2000, 5);
+  await retry(
+    () => page.goto(websiteUrl, { timeout: 15000, referer }),
+    15000,
+    2,
+  );
   console.log('Start get site data');
 
   await page.waitForTimeout(500 + Math.floor(Math.random() * 500));
 
-  // await page.waitForSelector('#btn-confirm');
-  // await page.click('#btn-confirm');
+  // if (Array.isArray(cookies) && cookies.length === 0) {
+  //   console.log('click cookie accept button');
+  //   await page.waitForSelector('#cookieAccpetBtn');
+  //   await page.click('#cookieAccpetBtn');
+  // }
+  // const freshCookies = await page.cookies();
+  // fs.writeFileSync(cookieFilePath, JSON.stringify(freshCookies, null, 2));
 
   await page.waitForTimeout(1500 + Math.floor(Math.random() * 500));
   await page.waitForSelector('#BookingS1Form');
+  await page.select('#BookingS1Form_tripCon_typesoftrip', '1');
+  await page.waitForTimeout(500 + Math.floor(Math.random() * 500));
   await page.select(
     'select[name="selectStartStation"]',
     startStnToValue[startStation],
@@ -87,17 +106,20 @@ async function crawlSiteData(
   );
 
   await page.waitForTimeout(2000 + Math.floor(Math.random() * 500));
-  let depatureDateSltr = `.flatpickr-days span[aria-label="${formattedDepartureDate['en-us']}"]`;
+  let depatureDateSltr = `.flatpickr-days span:not(.hidden)[aria-label="${formattedDepartureDate['en-us']}"]`;
   await page
     .$eval(depatureDateSltr, (span) => span.click())
     .catch(async (err) => {
       console.error(err.message);
-      depatureDateSltr = `.flatpickr-days span[aria-label="${formattedDepartureDate['zh-tw']}"]`;
+      depatureDateSltr = `.flatpickr-days span:not(.hidden)[aria-label="${formattedDepartureDate['zh-tw']}"]`;
       await page.$eval(depatureDateSltr, (span) => span.click());
     });
-
   await page.waitForTimeout(1500 + Math.floor(Math.random() * 500));
   await page.select('select[name="toTimeTable"]', '1201A');
+  await page.waitForTimeout(1000 + Math.floor(Math.random() * 500));
+  await page.$$eval(depatureDateSltr, (spans) => spans[1].click());
+  await page.waitForTimeout(1000 + Math.floor(Math.random() * 500));
+  await page.select('select[name="backTimeTable"]', '500A');
 
   await retry(
     async () => {
@@ -123,37 +145,7 @@ async function crawlSiteData(
   );
 
   await page.waitForTimeout(500 + Math.floor(Math.random() * 300));
-  await page.waitForSelector('#BookingS2Form_TrainQueryDataViewPanel');
-  const tickets = await page.evaluate(
-    (tkPriceMap, tkDiscountRatioMap, tkOrigin) => {
-      const dateElmt = document.querySelector('.date2 span');
-      const startStnElmt = document.querySelector('.stn-group span');
-      const desStnElmt = document.querySelector('.stn-group span:last-child');
-      const ticketDataWrapper = [
-        ...document.querySelectorAll('.mobile-wrapper'),
-      ];
-      return ticketDataWrapper.map((t) => {
-        const departureTimeElmt = t.querySelector('#QueryDeparture');
-        const arrivalTimeElmt = t.querySelector('#QueryArrival');
-        const discountElmt = t.querySelector('.early-bird span');
-        const stationPair = `${startStnElmt.textContent}-${desStnElmt.textContent}`;
-        const discount = discountElmt?.textContent ?? '原價';
-        return {
-          stationPair,
-          date: dateElmt.textContent,
-          time: `${departureTimeElmt.textContent}-${arrivalTimeElmt.textContent}`,
-          stock: '1',
-          discount,
-          price: String(tkPriceMap[stationPair] * tkDiscountRatioMap[discount]),
-          detailUrl: 'https://www.thsrc.com.tw/',
-          origin: tkOrigin,
-        };
-      });
-    },
-    stationPairTicketPriceMapping,
-    ticketDiscountRatioMapping,
-    ticketOrigin,
-  );
+  const tickets = await getAllRoundTripTicket(page);
 
   await page.waitForTimeout(300 + Math.floor(Math.random() * 300));
   return tickets;
@@ -194,7 +186,7 @@ async function captchaProcess(page) {
 
   await page.waitForTimeout(300 + Math.floor(Math.random() * 300));
   await Promise.allSettled([
-    page.waitForNavigation({ timeout: 2000 }),
+    page.waitForNavigation({ timeout: 20000 }),
     page.evaluate(() => document.querySelector('#BookingS1Form').submit()),
   ]);
 }
@@ -266,5 +258,91 @@ const ticketDiscountRatioMapping = {
   早鳥65折: 0.65,
   原價: 1,
 };
+
+/**
+ *
+ * @param {import('puppeteer').Page} page
+ */
+async function getAllRoundTripTicket(page) {
+  const ticketOrigin = constants.TICKET_ORIGIN.OFFICIAL;
+  const roundTripOutboundSltr = '#BookingS2Form_TrainQueryDataViewPanel';
+  const roundTripInboundSltr = '#BookingS2Form_TrainQueryDataViewPanel2';
+  await page.waitForSelector(roundTripOutboundSltr);
+  await page.waitForSelector(roundTripInboundSltr);
+  const getAllBoundTickets = async (boundSltr) => {
+    const departureTimeElmt = `${boundSltr} #QueryDeparture`;
+    const laterTrainBtnElmt = `${boundSltr}_PreAndLaterTrainContainer_laterTrainLink`;
+    const allBoundTickets = [];
+    // set i to limit max iterate count, prevent infinite loop due to web changing elmt
+    for (let i = 0; i < 10; i += 1) {
+      await page.waitForTimeout(1500 + Math.floor(Math.random() * 1000));
+      const oriDepartureTime = await page.$eval(
+        departureTimeElmt,
+        (span) => span.textContent,
+      );
+      const tickets = await page.evaluate(
+        getCurrentShownTicketProcess,
+        stationPairTicketPriceMapping,
+        ticketDiscountRatioMapping,
+        ticketOrigin,
+        boundSltr,
+      );
+      allBoundTickets.push(tickets);
+
+      const style = await page.$eval(laterTrainBtnElmt, (b) =>
+        b.getAttribute('style'),
+      );
+      if (style === 'visibility:hidden;') break;
+
+      await page.click(laterTrainBtnElmt);
+      await page.waitForFunction(
+        (depTimeElmt, oriDepTime) =>
+          document.querySelector(depTimeElmt).textContent !== oriDepTime,
+        { timeout: 5000 },
+        departureTimeElmt,
+        oriDepartureTime,
+      );
+    }
+    return allBoundTickets.flatMap((t) => t);
+  };
+  return [
+    ...(await getAllBoundTickets(roundTripOutboundSltr)),
+    ...(await getAllBoundTickets(roundTripInboundSltr)),
+  ];
+}
+
+function getCurrentShownTicketProcess(
+  tkPriceMap,
+  tkDiscountRatioMap,
+  tkOrigin,
+  boundSltr,
+) {
+  const getBoundTickets = (boundElmt) => {
+    const dateElmt = boundElmt.querySelector('.date2 span');
+    const startStnElmt = boundElmt.querySelector('.stn-group span');
+    const desStnElmt = boundElmt.querySelector('.stn-group span:last-child');
+    const ticketDataWrapper = [
+      ...boundElmt.querySelectorAll('.mobile-wrapper'),
+    ];
+    return ticketDataWrapper.map((t) => {
+      const departureTimeElmt = t.querySelector('#QueryDeparture');
+      const arrivalTimeElmt = t.querySelector('#QueryArrival');
+      const discountElmt = t.querySelector('.early-bird span');
+      const stationPair = `${startStnElmt.textContent}-${desStnElmt.textContent}`;
+      const discount = discountElmt?.textContent ?? '原價';
+      return {
+        stationPair,
+        date: dateElmt.textContent,
+        time: `${departureTimeElmt.textContent}-${arrivalTimeElmt.textContent}`,
+        stock: '1',
+        discount,
+        price: String(tkPriceMap[stationPair] * tkDiscountRatioMap[discount]),
+        detailUrl: 'https://www.thsrc.com.tw/',
+        origin: tkOrigin,
+      };
+    });
+  };
+  return getBoundTickets(document.querySelector(boundSltr));
+}
 
 export default crawlSiteData;

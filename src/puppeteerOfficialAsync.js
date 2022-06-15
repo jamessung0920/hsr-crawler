@@ -25,17 +25,14 @@ async function runPuppeteer(
   try {
     console.log('launch');
     browser = await puppeteer.launch({
-      // headless: false,
       args: [
         '--no-sandbox',
-        // '--disable-setuid-sandbox',
-        // '--disable-gpu',
+        '--disable-setuid-sandbox',
         '--single-process',
         '--no-zygote',
         '--disable-gl-drawing-for-tests',
         `--proxy-server=http://${proxyIp}:${proxyPort}`,
       ],
-      // devtools: true,
     });
 
     tickets = await crawlSiteData(browser, ...stationPairAndDateCombination);
@@ -92,7 +89,7 @@ function isGoodTimeToCrawl() {
   const timezoneDiff = tzOffset * 60 + date.getTimezoneOffset();
   date.setTime(date.getTime() + timezoneDiff * 60 * 1000);
 
-  if (date.getHours() >= 0 && date.getHours() <= 8) return false;
+  if (date.getHours() >= 0 && date.getHours() < 8) return false;
   return true;
 }
 
