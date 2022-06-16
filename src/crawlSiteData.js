@@ -4,7 +4,6 @@ import path from 'path';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import FormData from 'form-data';
-import randomUseragent from 'random-useragent';
 import retry from './utils/retry';
 import config from './config';
 import constants from './constants';
@@ -38,10 +37,8 @@ async function crawlSiteData(
 
   const websiteUrl = 'https://irs.thsrc.com.tw/IMINT/?locale=tw';
   const referer = 'https://www.thsrc.com.tw/';
-  const DEFAULT_USER_AGENT =
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.79 Safari/537.36';
-  const userAgent = randomUseragent.getRandom();
-  const UA = userAgent || DEFAULT_USER_AGENT;
+  const UA = pickUserAgent();
+  console.log(UA);
   const cookie = {
     name: 'AcceptIRSCookiePolicyTime',
     value:
@@ -141,7 +138,7 @@ async function crawlSiteData(
       }
     },
     500,
-    5,
+    8,
   );
 
   await page.waitForTimeout(500 + Math.floor(Math.random() * 300));
@@ -208,6 +205,30 @@ async function renewCaptchaImg(page) {
     oriCaptchaImgSrc,
   );
   console.log('img changed');
+}
+
+// get a userAgent, and make most use chrome, then firefox
+// randomUserAgent package is not good because it may cause page.goto stuck with some userAgent
+function pickUserAgent() {
+  // target website seems to accept newer version and much-like real computer browser user
+  const userAgentCandidates = [
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.79 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.109 Safari/537.36 OPR/84.0.4316.42',
+  ];
+  const rand = Math.floor(Math.random() * 100);
+  let ua;
+  switch (true) {
+    case rand < 95:
+      ua = userAgentCandidates[0];
+      break;
+    case rand < 100:
+      ua = userAgentCandidates[1];
+      break;
+    default:
+      ua = userAgentCandidates[0];
+      break;
+  }
+  return ua;
 }
 
 function genFormattedDepartureDate(depatureDate) {
