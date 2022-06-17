@@ -23,6 +23,7 @@ export default async function getUserExpectedTickets(
       expectedStationPair,
       expectedDepartureAfter,
       expectedPurchaseCount,
+      'official',
     );
 
     let replyText = '';

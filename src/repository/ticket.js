@@ -1,12 +1,29 @@
-async function getTickets(pgPool, stationPair, departureAfter, purchaseCount) {
+async function getTickets(
+  pgPool,
+  stationPair,
+  departureAfter,
+  purchaseCount,
+  ticketOrigin,
+) {
   const tickets = await pgPool.query(
     `
-      SELECT * FROM tickets
-      WHERE station_pair = $1 AND departure_time >= $2 AND stock >= $3
+      SELECT *
+      FROM tickets t1
+      WHERE station_pair = $1
+        AND departure_time >= $2
+        AND stock >= $3
+        AND origin = $4
+        AND created_at = (
+          SELECT MAX(created_at)
+          FROM tickets t2
+          WHERE t1.station_pair = t2.station_pair
+            AND t1.departure_time = t2.departure_time
+            AND t1.origin = t2.origin
+        )
       ORDER BY departure_time ASC, discount DESC
-      LIMIT 100
+      LIMIT 15
     `,
-    [stationPair, departureAfter, purchaseCount],
+    [stationPair, departureAfter, purchaseCount, ticketOrigin],
   );
   return tickets;
 }

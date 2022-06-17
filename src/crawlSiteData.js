@@ -120,7 +120,7 @@ async function crawlSiteData(
 
   await retry(
     async () => {
-      await page.waitForTimeout(500 + Math.floor(Math.random() * 500));
+      await page.waitForTimeout(1500 + Math.floor(Math.random() * 500));
 
       const ticketAmountSltr = 'select[name="ticketPanel:rows:0:ticketAmount';
       await page.waitForSelector(ticketAmountSltr, { timeout: 5000 });
@@ -137,8 +137,8 @@ async function crawlSiteData(
         throw new Error('captcha recognition fail. recognize again ...');
       }
     },
-    500,
-    8,
+    50,
+    10,
   );
 
   await page.waitForTimeout(500 + Math.floor(Math.random() * 300));
@@ -193,6 +193,7 @@ async function captchaProcess(page) {
  * @param {import('puppeteer').Page} page
  */
 async function renewCaptchaImg(page) {
+  await page.waitForTimeout(500 + Math.floor(Math.random() * 500));
   const captchaImgSltr = '#BookingS1Form_homeCaptcha_passCode';
   const oriCaptchaImgSrc = await page.$eval(captchaImgSltr, (i) => i.src);
   await page.click('#BookingS1Form_homeCaptcha_reCodeLink');
@@ -319,7 +320,7 @@ async function getAllRoundTripTicket(page) {
       await page.waitForFunction(
         (depTimeElmt, oriDepTime) =>
           document.querySelector(depTimeElmt).textContent !== oriDepTime,
-        { timeout: 5000 },
+        { timeout: 15000 },
         departureTimeElmt,
         oriDepartureTime,
       );
