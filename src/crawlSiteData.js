@@ -91,10 +91,10 @@ async function crawlSiteData(
   // const freshCookies = await page.cookies();
   // fs.writeFileSync(cookieFilePath, JSON.stringify(freshCookies, null, 2));
 
-  await page.waitForTimeout(1500 + Math.floor(Math.random() * 500));
+  await page.waitForTimeout(500 + Math.floor(Math.random() * 500));
   await page.waitForSelector('#BookingS1Form');
   await page.select('#BookingS1Form_tripCon_typesoftrip', '1');
-  await page.waitForTimeout(500 + Math.floor(Math.random() * 500));
+  await page.waitForTimeout(1000 + Math.floor(Math.random() * 500));
   await page.select(
     'select[name="selectStartStation"]',
     startStnToValue[startStation],
@@ -116,18 +116,22 @@ async function crawlSiteData(
     });
   await page.waitForTimeout(1500 + Math.floor(Math.random() * 500));
   await page.select('select[name="toTimeTable"]', '1201A');
-  await page.waitForTimeout(1000 + Math.floor(Math.random() * 500));
+  await page.waitForTimeout(1500 + Math.floor(Math.random() * 500));
   await page.$$eval(depatureDateSltr, (spans) => spans[1].click());
-  await page.waitForTimeout(1000 + Math.floor(Math.random() * 500));
+  await page.waitForTimeout(1200 + Math.floor(Math.random() * 500));
   await page.select('select[name="backTimeTable"]', '500A');
 
   await retry(
     async () => {
-      await page.waitForTimeout(1500 + Math.floor(Math.random() * 500));
+      await page.waitForTimeout(300 + Math.floor(Math.random() * 300));
 
       const ticketAmountSltr = 'select[name="ticketPanel:rows:0:ticketAmount';
       await page.waitForSelector(ticketAmountSltr, { timeout: 5000 });
-      await page.select(ticketAmountSltr, '1F');
+      const tkAmountVal = await page.$eval(ticketAmountSltr, (s) => s.value);
+      if (tkAmountVal !== '1F') {
+        await page.waitForTimeout(1200 + Math.floor(Math.random() * 500));
+        await page.select(ticketAmountSltr, '1F');
+      }
 
       await captchaProcess(page);
       console.log('load');
@@ -140,14 +144,14 @@ async function crawlSiteData(
         throw new Error('captcha recognition fail. recognize again ...');
       }
     },
-    50,
+    20,
     10,
   );
 
-  await page.waitForTimeout(500 + Math.floor(Math.random() * 300));
+  await page.waitForTimeout(300 + Math.floor(Math.random() * 300));
   const tickets = await getAllRoundTripTicket(page);
 
-  await page.waitForTimeout(300 + Math.floor(Math.random() * 300));
+  await page.waitForTimeout(600 + Math.floor(Math.random() * 300));
   return tickets;
 }
 
@@ -196,7 +200,7 @@ async function captchaProcess(page) {
  * @param {import('puppeteer').Page} page
  */
 async function renewCaptchaImg(page) {
-  await page.waitForTimeout(500 + Math.floor(Math.random() * 500));
+  await page.waitForTimeout(700 + Math.floor(Math.random() * 500));
   const captchaImgSltr = '#BookingS1Form_homeCaptcha_passCode';
   const oriCaptchaImgSrc = await page.$eval(captchaImgSltr, (i) => i.src);
   await page.click('#BookingS1Form_homeCaptcha_reCodeLink');
@@ -295,14 +299,15 @@ async function getAllRoundTripTicket(page) {
   await page.waitForSelector(roundTripOutboundSltr);
   await page.waitForSelector(roundTripInboundSltr);
   const getAllBoundTickets = async (boundSltr) => {
-    const departureTimeElmt = `${boundSltr} #QueryDeparture`;
-    const laterTrainBtnElmt = `${boundSltr}_PreAndLaterTrainContainer_laterTrainLink`;
+    const departureTimeSltr = `${boundSltr} #QueryDeparture`;
+    const laterTrainBtnSltr = `${boundSltr}_PreAndLaterTrainContainer_laterTrainLink`;
+    await page.evaluate(scrollToElement, laterTrainBtnSltr);
     const allBoundTickets = [];
     // set i to limit max iterate count, prevent infinite loop due to web changing elmt
     for (let i = 0; i < 10; i += 1) {
-      await page.waitForTimeout(1400 + Math.floor(Math.random() * 600));
+      await page.waitForTimeout(1100 + Math.floor(Math.random() * 700));
       const oriDepartureTime = await page.$eval(
-        departureTimeElmt,
+        departureTimeSltr,
         (span) => span.textContent,
       );
       const tickets = await page.evaluate(
@@ -314,17 +319,17 @@ async function getAllRoundTripTicket(page) {
       );
       allBoundTickets.push(tickets);
 
-      const style = await page.$eval(laterTrainBtnElmt, (b) =>
+      const style = await page.$eval(laterTrainBtnSltr, (b) =>
         b.getAttribute('style'),
       );
       if (style === 'visibility:hidden;') break;
 
-      await page.click(laterTrainBtnElmt);
+      await page.click(laterTrainBtnSltr);
       await page.waitForFunction(
         (depTimeElmt, oriDepTime) =>
           document.querySelector(depTimeElmt).textContent !== oriDepTime,
         { timeout: 15000 },
-        departureTimeElmt,
+        departureTimeSltr,
         oriDepartureTime,
       );
     }
@@ -368,6 +373,18 @@ function getCurrentShownTicketProcess(
     });
   };
   return getBoundTickets(document.querySelector(boundSltr));
+}
+
+function scrollToElement(sltr) {
+  document.querySelector(sltr).scrollIntoView({
+    behavior: 'smooth',
+    block: 'end',
+    inline: 'nearest',
+  });
+  window.scrollBy({
+    top: 500 + Math.floor(Math.random() * 200),
+    behavior: 'smooth',
+  });
 }
 
 export default crawlSiteData;
