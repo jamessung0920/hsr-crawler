@@ -9,6 +9,7 @@ import initPostgres from './postgres';
 import initRedis from './redis';
 import ticketRepo from './repository/ticket';
 import getStationPairAndDateCombinations from './utils/getStationPairAndDateCombinations';
+import arrayShuffle from './utils/arrayShuffle';
 
 const sleep = util.promisify(setTimeout);
 
@@ -54,14 +55,23 @@ const crawlPerSecond = parseInt(config.puppeteer.crawlPeriod, 10) || 600;
 
 // official
 async function x() {
-  const stationPairAndDateCombinations = getStationPairAndDateCombinations();
-  for (const c of stationPairAndDateCombinations) {
-    runPuppeteer(pgPool, redisClient, c);
-    await sleep(120 * 1000);
+  /* eslint-disable no-await-in-loop */
+  const combis = getStationPairAndDateCombinations();
+  const proxyIps = config.upstreamProxy.ips.split('|');
+  for (; combis.length > 0; combis.splice(0, 2)) {
+    const [ip1, ip2] = arrayShuffle(proxyIps);
+    const [c0, c1] = combis;
+    console.log(ip1, ip2, combis.length);
+    await Promise.all([
+      runPuppeteer(pgPool, redisClient, c0, ip1),
+      sleep(9000).then(() => !c1 || runPuppeteer(pgPool, redisClient, c1, ip2)),
+    ]);
+    await sleep((9 + Math.floor(Math.random() * 3)) * 1000);
   }
+  console.log('finish this period');
 }
 x();
-setInterval(x, 10800 * 1000);
+setInterval(x, 3600 * 1000);
 
 // latebird
 // runPuppeteer(pgPool, redisClient);

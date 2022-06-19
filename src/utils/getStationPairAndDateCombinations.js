@@ -1,5 +1,6 @@
 import constants from '../constants';
 import config from '../config';
+import arrayShuffle from './arrayShuffle';
 
 /**
  * @example
@@ -28,15 +29,7 @@ function getStationPairAndDateCombinations() {
     .flatMap((s) => datesToCrawl.map((d) => [s, d]))
     .map((spwd) => [spwd[0][0], spwd[0][1], spwd[1]]);
 
-  // array shuffle
-  for (let i = everyStationPairWithDate.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [everyStationPairWithDate[i], everyStationPairWithDate[j]] = [
-      everyStationPairWithDate[j],
-      everyStationPairWithDate[i],
-    ];
-  }
-
-  return everyStationPairWithDate;
+  return arrayShuffle(everyStationPairWithDate);
 }
+
 export default getStationPairAndDateCombinations;

@@ -12,12 +12,13 @@ async function runPuppeteer(
   pgPool,
   redisClient,
   stationPairAndDateCombination,
+  proxyIp,
 ) {
   if (!isGoodTimeToCrawl()) return;
 
   const now = Date.now();
   console.time(`===== runPuppeteer-${now} =====`);
-  const { ip: proxyIp, port: proxyPort } = config.upstreamProxy;
+  const { port: proxyPort } = config.upstreamProxy;
   const { expireTimeOfficial } = config.redis;
   let browser;
   let tickets = [];

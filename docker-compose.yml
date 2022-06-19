@@ -20,7 +20,7 @@ services:
     image: redis:6.2.6-alpine
     volumes:
       - ./redis.conf:/var/lib/redis/redis.conf
-      - redis_data:/var/lib/rediss
+      - redis_data:/var/lib/redis
     command: sh -c "redis-server /var/lib/redis/redis.conf"
   postgres:
     image: postgres:14-alpine

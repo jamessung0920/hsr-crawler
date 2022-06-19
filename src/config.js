@@ -23,6 +23,7 @@ export default {
   },
   upstreamProxy: {
     port: process.env.UPSTREAM_PROXY_PORT,
+    ips: process.env.UPSTREAM_PROXY_IPS,
     ip: process.env.UPSTREAM_PROXY_IP,
     username: process.env.UPSTREAM_PROXY_USERNAME,
     password: process.env.UPSTREAM_PROXY_PASSWORD,

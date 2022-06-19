@@ -69,13 +69,16 @@ async function crawlSiteData(
   //   'Sec-Fetch-Site': 'same-site',
   //   'Sec-GPC': '1',
   // });
+
+  // await page.setRequestInterception(true);
+  // page.on('request', async (request) => {
+  //   const headers = { ...request.headers(), 'Cache-Control': 'max-age=0'};
+  //   request.continue({ headers });
+  // });
+
   await page.authenticate({ username: proxyUsername, password: proxyPassword });
   console.log('Visit site');
-  await retry(
-    () => page.goto(websiteUrl, { timeout: 15000, referer }),
-    15000,
-    2,
-  );
+  await retry(() => page.goto(websiteUrl, { timeout: 9000, referer }), 9000, 2);
   console.log('Start get site data');
 
   await page.waitForTimeout(500 + Math.floor(Math.random() * 500));
@@ -297,7 +300,7 @@ async function getAllRoundTripTicket(page) {
     const allBoundTickets = [];
     // set i to limit max iterate count, prevent infinite loop due to web changing elmt
     for (let i = 0; i < 10; i += 1) {
-      await page.waitForTimeout(1500 + Math.floor(Math.random() * 1000));
+      await page.waitForTimeout(1400 + Math.floor(Math.random() * 600));
       const oriDepartureTime = await page.$eval(
         departureTimeElmt,
         (span) => span.textContent,
