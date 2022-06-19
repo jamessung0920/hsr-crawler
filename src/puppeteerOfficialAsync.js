@@ -83,14 +83,14 @@ function transformTicketData(ticket) {
   };
 }
 
-// only crawl on AM8:00 to AM12:00
+// only crawl on AM8:00 to AM1:00
 function isGoodTimeToCrawl() {
   const { TIMEZONE_OFFSET: tzOffset } = constants.OFFICIAL;
   const date = new Date();
   const timezoneDiff = tzOffset * 60 + date.getTimezoneOffset();
   date.setTime(date.getTime() + timezoneDiff * 60 * 1000);
 
-  if (date.getHours() >= 0 && date.getHours() < 8) return false;
+  if (date.getHours() > 0 && date.getHours() < 8) return false;
   return true;
 }
 

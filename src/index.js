@@ -60,13 +60,15 @@ async function x() {
   const proxyIps = config.upstreamProxy.ips.split('|');
   for (; combis.length > 0; combis.splice(0, 2)) {
     const [ip1, ip2] = arrayShuffle(proxyIps);
-    const [c0, c1] = combis;
+    const [c1, c2] = combis;
     console.log(ip1, ip2, combis.length);
     await Promise.all([
-      runPuppeteer(pgPool, redisClient, c0, ip1),
-      sleep(9000).then(() => !c1 || runPuppeteer(pgPool, redisClient, c1, ip2)),
+      runPuppeteer(pgPool, redisClient, c1, ip1),
+      sleep((8 + Math.floor(Math.random() * 5)) * 1000).then(async () => {
+        if (c2) await runPuppeteer(pgPool, redisClient, c2, ip2);
+      }),
     ]);
-    await sleep((9 + Math.floor(Math.random() * 3)) * 1000);
+    await sleep((9 + Math.floor(Math.random() * 5)) * 1000);
   }
   console.log('finish this period');
 }

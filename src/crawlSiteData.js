@@ -222,7 +222,7 @@ function pickUserAgent() {
   const rand = Math.floor(Math.random() * 100);
   let ua;
   switch (true) {
-    case rand < 95:
+    case rand < 92:
       ua = userAgentCandidates[0];
       break;
     case rand < 100:
