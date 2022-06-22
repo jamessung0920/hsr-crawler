@@ -4,9 +4,9 @@ import path from 'path';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import FormData from 'form-data';
-import retry from './utils/retry';
-import config from './config';
-import constants from './constants';
+import retry from '../utils/retry';
+import config from '../config';
+import constants from '../constants';
 
 const __filename = new URL(import.meta.url).pathname;
 const __dirname = path.dirname(__filename);
@@ -163,7 +163,7 @@ async function captchaProcess(page) {
   const randomDirName = uuidv4();
   const captchaFileDir = path.resolve(
     __filename,
-    `../../downloads/${randomDirName}/`,
+    `../../../downloads/${randomDirName}/`,
   );
   console.log(__filename, captchaFileDir);
 

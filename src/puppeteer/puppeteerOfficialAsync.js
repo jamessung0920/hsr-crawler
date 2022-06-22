@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { v4 as uuidv4 } from 'uuid';
-import crawlSiteData from '../crawlSiteData';
+import crawlSiteData from './crawlSiteData';
 import config from '../config';
 import ticketRepo from '../repository/ticket';
 import constants from '../constants';

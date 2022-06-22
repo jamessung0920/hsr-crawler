@@ -46,8 +46,8 @@ async function x() {
   }
   console.log('finish this period');
 }
-// x();
-// setInterval(x, 3600 * 1000);
+x();
+setInterval(x, 3600 * 1000);
 
 // latebird
 // runPuppeteer(pgPool, redisClient);
