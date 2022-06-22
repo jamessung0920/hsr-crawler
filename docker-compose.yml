@@ -9,8 +9,6 @@ services:
       - ./package.json:/app/package.json
       - ./package-lock.json:/app/package-lock.json
       - logvolume01:/var/log
-      - ./downloads:/app/downloads
-      - ./cookies.json:/app/cookies.json
     links:
       - redis
       - postgres
