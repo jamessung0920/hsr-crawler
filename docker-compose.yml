@@ -14,7 +14,7 @@ services:
     links:
       - redis
       - postgres
-      - captchasolver
+      - captchaSolver
     command: npm run start-crawler
     env_file: .env
     security_opt:
