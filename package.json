@@ -6,8 +6,10 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --es-module-specifier-resolution=node src/index.js",
-    "debug": "nodemon --watch src --es-module-specifier-resolution=node --inspect=0.0.0.0 src/index.js",
+    "start-webhook": "node --es-module-specifier-resolution=node src/index.js",
+    "start-crawler": "node --es-module-specifier-resolution=node src/puppeteer/index.js",
+    "debug-webhook": "nodemon --watch src --es-module-specifier-resolution=node --inspect=0.0.0.0 src/index.js",
+    "debug-crawler": "nodemon --watch src --es-module-specifier-resolution=node src/puppeteer/index.js",
     "migrate": "node-pg-migrate"
   },
   "author": "",

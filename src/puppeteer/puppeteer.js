@@ -2,9 +2,9 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { v4 as uuidv4 } from 'uuid';
 import randomUseragent from 'random-useragent';
-import constants from './constants';
-import config from './config';
-import ticketRepo from './repository/ticket';
+import constants from '../constants';
+import config from '../config';
+import ticketRepo from '../repository/ticket';
 
 puppeteer.use(StealthPlugin());
 

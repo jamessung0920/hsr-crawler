@@ -1,7 +1,28 @@
 version: "3.9" 
 services:
-  web-and-crawler:
-    build: .
+  crawler:
+    build:
+      context: .
+      dockerfile: ./docker_services/crawler/Dockerfile
+    volumes:
+      - ./src:/app/src
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+      - logvolume01:/var/log
+      - ./downloads:/app/downloads
+      - ./cookies.json:/app/cookies.json
+    links:
+      - redis
+      - postgres
+      - captchasolver
+    command: npm run start-crawler
+    env_file: .env
+    security_opt:
+      - seccomp=./chrome.json
+  webhook:
+    build:
+      context: .
+      dockerfile: ./docker_services/webhook/Dockerfile
     ports:
       - "23580:3000"
       - "9229:9229"
@@ -10,11 +31,11 @@ services:
       - ./migrations:/app/migrations
       - ./package.json:/app/package.json
       - ./package-lock.json:/app/package-lock.json
-      - logvolume01:/var/log
+      - logvolume02:/var/log
     links:
       - redis
       - postgres
-    command: sh -c "sleep 5 && npm run migrate up && npm run start"
+    command: sh -c "sleep 5 && npm run migrate up && npm run start-webhook"
     env_file: .env
   redis:
     image: redis:6.2.6-alpine
@@ -33,11 +54,12 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-  captchaResolver:
+  captchaSolver:
     image: ocr_server:v1
     ports:
       - "9898:9898"
 volumes:
   logvolume01: {}
+  logvolume02: {}
   postgres_data:
   redis_data:
