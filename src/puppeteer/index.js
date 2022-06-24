@@ -36,7 +36,7 @@ async function x() {
     const [ip] = arrayShuffle(proxyIps);
     const [c] = combis;
     console.log(ip, combis.length);
-    runPuppeteer(pgPool, redisClient, c, ip);
+    await runPuppeteer(pgPool, redisClient, c, ip);
     await sleep((10 + Math.floor(Math.random() * 8)) * 1000);
   }
   console.log('finish this period');
