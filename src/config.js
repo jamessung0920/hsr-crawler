@@ -9,6 +9,7 @@ export default {
   },
   redis: {
     host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT,
     expireTime: process.env.REDIS_EXPIRE_TIME,
     expireTimeOfficial: process.env.REDIS_EXPIRE_TIME_OFFICIAL,
   },
