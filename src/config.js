@@ -19,7 +19,8 @@ export default {
   },
   puppeteer: {
     crawlPeriod: process.env.CRAWL_PERIOD,
-    crawlDaysAfterToday: process.env.CRAWL_DAYS_AFTER_TODAY,
+    crawlDaysIgnoredSinceToday: process.env.CRAWL_DAYS_IGNORED_FROM_TODAY,
+    crawlDays: process.env.CRAWL_DAYS,
   },
   upstreamProxy: {
     port: process.env.UPSTREAM_PROXY_PORT,

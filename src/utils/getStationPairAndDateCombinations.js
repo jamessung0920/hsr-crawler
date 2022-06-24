@@ -5,18 +5,22 @@ import arrayShuffle from './arrayShuffle';
 /**
  * @example
  * // return [['台北', '左營', '2022-06-01'], ['台北', '台中', '2022-06-02'], ...]
- * @returns {string[][]} Returns array of arrays of strings which contain every combinations of
+ * @returns {string[][]} Returns array of arrays of strings which contain combinations of
  * startStation, destinationStation and date
  */
 function getStationPairAndDateCombinations() {
   const { STATIONS: stations, TIMEZONE_OFFSET: tzOffset } = constants.OFFICIAL;
-  const { crawlDaysAfterToday } = config.puppeteer;
+  const { crawlDaysIgnoredSinceToday, crawlDays } = config.puppeteer;
   const date = new Date();
   const timezoneDiff = tzOffset * 60 + date.getTimezoneOffset();
-  date.setTime(date.getTime() + timezoneDiff * 60 * 1000);
+  date.setTime(
+    date.getTime() +
+      parseInt(crawlDaysIgnoredSinceToday, 10) * 24 * 60 * 60 * 1000 +
+      timezoneDiff * 60 * 1000,
+  );
 
   const datesToCrawl = [date.toISOString().split('T')[0]];
-  for (let i = 0; i < crawlDaysAfterToday; i += 1) {
+  for (let i = 0; i < parseInt(crawlDays, 10); i += 1) {
     date.setDate(date.getDate() + 1);
     datesToCrawl.push(date.toISOString().split('T')[0]);
   }
