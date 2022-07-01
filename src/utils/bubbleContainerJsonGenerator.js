@@ -9,27 +9,10 @@
  * @param {string} ticketObj.discount ex: 65折
  * @param {string} ticketObj.detailUrl ex: https://www.xyzabc123.co/
  * @param {string} ticketObj.origin ex: 晚鳥票|高鐵官網
- * @param {boolean} isSearchStep
  * @returns
  */
-export default function generateLineBubbleContainerJson(
-  ticketObj,
-  isSearchStep,
-) {
+export default function generateLineBubbleContainerJson(ticketObj) {
   // reference: https://developers.line.biz/flex-simulator/
-  let websiteContent;
-  if (isSearchStep) {
-    websiteContent = {
-      type: 'button',
-      style: 'link',
-      height: 'sm',
-      action: {
-        type: 'uri',
-        label: 'WEBSITE',
-        uri: ticketObj.detailUrl,
-      },
-    };
-  }
   return {
     type: 'bubble',
     hero: {
@@ -196,7 +179,16 @@ export default function generateLineBubbleContainerJson(
       layout: 'vertical',
       spacing: 'sm',
       contents: [
-        websiteContent,
+        {
+          type: 'button',
+          style: 'link',
+          height: 'sm',
+          action: {
+            type: 'uri',
+            label: 'WEBSITE',
+            uri: ticketObj.detailUrl,
+          },
+        },
         {
           type: 'box',
           layout: 'vertical',

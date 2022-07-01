@@ -1,13 +1,9 @@
 import config from '../config';
 import ticketRepo from '../repository/ticket';
+import userWishTicketRepo from '../repository/userWishTicket';
 import generateLineBubbleContainerJson from '../utils/bubbleContainerJsonGenerator';
 
-export default async function getUserExpectedTickets(
-  userInput,
-  isSearchStep,
-  pgPool,
-  redisClient,
-) {
+async function getUserExpectedTickets(userInput, pgPool, redisClient) {
   const userExpectedTicketsInfo = userInput.split(' ');
   const expectedStationPair = userExpectedTicketsInfo[0];
   const expectedDepartureAfter = new Date(
@@ -35,7 +31,7 @@ export default async function getUserExpectedTickets(
         const rawTicket = await redisClient.get(ticket.id);
         const rawTicketObj = JSON.parse(rawTicket);
         containerJsonTicketsForResponse.push(
-          generateLineBubbleContainerJson(rawTicketObj, isSearchStep),
+          generateLineBubbleContainerJson(rawTicketObj),
         );
       }
       replyText = `有票喔！幫您列出資訊如下 (最多${config.webhook.line.showTicketCount}筆)`;
@@ -66,3 +62,30 @@ export default async function getUserExpectedTickets(
     throw err;
   }
 }
+
+async function insertUserWishTicket(userId, userInput, pgPool, redisClient) {
+  const userExpectedTicketsInfo = userInput.split(' ');
+  const expectedStationPair = userExpectedTicketsInfo[0];
+  const expectedDepartureAfter = new Date(
+    `${userExpectedTicketsInfo[1]} ${userExpectedTicketsInfo[2]} UTC+8`,
+  );
+  const expectedPurchaseCount = parseInt(
+    userExpectedTicketsInfo[3].split('張')[0],
+    10,
+  );
+  try {
+    await userWishTicketRepo.insertUserWishTicket(
+      pgPool,
+      userId,
+      expectedStationPair,
+      expectedDepartureAfter,
+      expectedPurchaseCount,
+    );
+    return [{ type: 'text', text: '已完成關注，若有符合的票會通知您。' }];
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
+export default { getUserExpectedTickets, insertUserWishTicket };

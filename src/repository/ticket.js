@@ -21,7 +21,7 @@ async function getTickets(
             AND t1.origin = t2.origin
         )
       ORDER BY departure_time ASC, discount DESC
-      LIMIT 15
+      LIMIT 12
     `,
     [stationPair, departureAfter, purchaseCount, ticketOrigin],
   );

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import getUserExpectedTickets from './ticketResponse';
+import ticketResponse from './ticketResponse';
 import constants from '../constants';
 import config from '../config';
 import instruction from '../utils/instructionGenerator';
@@ -34,16 +34,21 @@ async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
       switch (userInput) {
         case constants.RICH_MENU_ACTION.SEARCH: {
           console.log('查詢車票');
-          const userActionCache = { isSearchStep: true };
-          await redisClient.set(userId, JSON.stringify(userActionCache), {
-            EX: config.redis.expireTime,
-            NX: true,
-          });
+          await redisClient.set(
+            `action-${userId}`,
+            constants.RICH_MENU_ACTION.SEARCH,
+            { EX: config.redis.expireTime },
+          );
           messageObjects = instruction.getSearchStepInstruction();
           break;
         }
         case constants.RICH_MENU_ACTION.FOLLOW: {
           console.log('關注車票');
+          await redisClient.set(
+            `action-${userId}`,
+            constants.RICH_MENU_ACTION.FOLLOW,
+            { EX: config.redis.expireTime },
+          );
           messageObjects = instruction.getFollowStepInstruction();
           break;
         }
@@ -53,23 +58,33 @@ async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
           break;
         }
         default: {
-          console.log('票');
-          const userActionCache = await redisClient.get(userId);
-          const isSearchStep = userActionCache
-            ? JSON.parse(userActionCache).isSearchStep
-            : false;
-          messageObjects = await getUserExpectedTickets(
-            userInput,
-            isSearchStep,
-            pgPool,
-            redisClient,
-          );
+          console.log('使用者輸入票的資訊 or 沒選動作');
+          const userActionCache = await redisClient.get(`action-${userId}`);
+          if (userActionCache === constants.RICH_MENU_ACTION.SEARCH) {
+            messageObjects = await ticketResponse.getUserExpectedTickets(
+              userInput,
+              pgPool,
+              redisClient,
+            );
+          } else if (userActionCache === constants.RICH_MENU_ACTION.FOLLOW) {
+            messageObjects = await ticketResponse.insertUserWishTicket(
+              userId,
+              userInput,
+              pgPool,
+              redisClient,
+            );
+          } else {
+            messageObjects = [{ type: 'text', text: '請先由下方menu選擇動作' }];
+          }
           break;
         }
       }
 
-      if (userInput !== constants.RICH_MENU_ACTION.SEARCH) {
-        await redisClient.del(userId);
+      if (
+        userInput !== constants.RICH_MENU_ACTION.SEARCH &&
+        userInput !== constants.RICH_MENU_ACTION.FOLLOW
+      ) {
+        await redisClient.del(`action-${userId}`);
       }
 
       axios.post(
