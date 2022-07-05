@@ -11,6 +11,7 @@ export default {
     INSTRUCTION: '使用說明',
     SEARCH: '查詢車票',
     FOLLOW: '關注車票',
+    FOLLOW_LIST: '關注列表',
   },
   TICKET_ORIGIN: {
     LATEBIRD: '晚鳥票',

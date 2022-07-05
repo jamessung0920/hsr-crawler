@@ -63,7 +63,7 @@ async function getUserExpectedTickets(userInput, pgPool, redisClient) {
   }
 }
 
-async function insertUserWishTicket(userId, userInput, pgPool, redisClient) {
+async function insertUserWishTicket(userId, userInput, pgPool) {
   const userExpectedTicketsInfo = userInput.split(' ');
   const expectedStationPair = userExpectedTicketsInfo[0];
   const expectedDepartureAfter = new Date(
@@ -74,6 +74,32 @@ async function insertUserWishTicket(userId, userInput, pgPool, redisClient) {
     10,
   );
   try {
+    const userWishTickets = await userWishTicketRepo.getUserWishTicketsByUserId(
+      pgPool,
+      userId,
+    );
+    if (userWishTickets.rows.length >= 3) {
+      await userWishTicketRepo.deleteUserWishTicketById(
+        pgPool,
+        userWishTickets.rows[userWishTickets.rows.length - 1].id,
+      );
+    }
+
+    for (const t of userWishTickets.rows) {
+      if (
+        t.station_pair === expectedStationPair &&
+        t.departure_time.getTime() === expectedDepartureAfter.getTime() &&
+        t.count === expectedPurchaseCount
+      ) {
+        return [
+          {
+            type: 'text',
+            text: '您以關注過相同的車票資訊，可至關注列表查詢。',
+          },
+        ];
+      }
+    }
+
     await userWishTicketRepo.insertUserWishTicket(
       pgPool,
       userId,

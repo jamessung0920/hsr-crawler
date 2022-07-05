@@ -195,7 +195,7 @@ export default function generateLineBubbleContainerJson(ticketObj) {
           contents: [],
           margin: 'sm',
         },
-      ].filter(Boolean),
+      ],
       flex: 0,
     },
   };

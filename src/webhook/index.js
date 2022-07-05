@@ -39,7 +39,7 @@ async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
             constants.RICH_MENU_ACTION.SEARCH,
             { EX: config.redis.expireTime },
           );
-          messageObjects = instruction.getSearchStepInstruction();
+          messageObjects = instruction.getSearchActionInstruction();
           break;
         }
         case constants.RICH_MENU_ACTION.FOLLOW: {
@@ -49,12 +49,20 @@ async function handleLineWebhook({ body: reqBody }, pgPool, redisClient) {
             constants.RICH_MENU_ACTION.FOLLOW,
             { EX: config.redis.expireTime },
           );
-          messageObjects = instruction.getFollowStepInstruction();
+          messageObjects = instruction.getFollowActionInstruction();
           break;
         }
         case constants.RICH_MENU_ACTION.INSTRUCTION: {
           console.log('使用說明');
           messageObjects = instruction.getAllInstruction();
+          break;
+        }
+        case constants.RICH_MENU_ACTION.FOLLOW_LIST: {
+          console.log('關注列表');
+          messageObjects = await instruction.getFollowListActionInstruction(
+            pgPool,
+            userId,
+          );
           break;
         }
         default: {

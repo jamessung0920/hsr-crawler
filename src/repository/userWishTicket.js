@@ -8,6 +8,16 @@ async function getAllUnnotifiedUsersWishTickets(pgPool) {
   return res;
 }
 
+async function getUserWishTicketsByUserId(pgPool, userId) {
+  const res = await pgPool.query(
+    `
+      SELECT * FROM user_wish_tickets WHERE line_user_id = $1 ORDER BY created_at DESC
+    `,
+    [userId],
+  );
+  return res;
+}
+
 async function insertUserWishTicket(
   pgPool,
   userId,
@@ -35,8 +45,19 @@ async function updateHasMetAndNotifiedById(pgPool, id) {
   return res;
 }
 
+async function deleteUserWishTicketById(pgPool, id) {
+  await pgPool.query(
+    `
+      DELETE FROM user_wish_tickets WHERE id = $1
+    `,
+    [id],
+  );
+}
+
 export default {
   getAllUnnotifiedUsersWishTickets,
+  getUserWishTicketsByUserId,
   insertUserWishTicket,
   updateHasMetAndNotifiedById,
+  deleteUserWishTicketById,
 };
