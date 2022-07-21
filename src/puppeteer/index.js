@@ -1,11 +1,11 @@
 import util from 'util';
 import getStationPairAndDateCombinations from '../utils/getStationPairAndDateCombinations';
 import arrayShuffle from '../utils/arrayShuffle';
-import runPuppeteer from './puppeteerOfficialAsync';
+import runPuppeteerOfficial from './puppeteerOfficial';
+import runPuppeteerLatebird from './puppeteerLatebird';
 import config from '../config';
 import initPostgres from '../postgres';
 import initRedis from '../redis';
-// import runPuppeteer from './puppeteer';
 
 const sleep = util.promisify(setTimeout);
 
@@ -25,7 +25,10 @@ process.on('unhandledRejection', (reason, p) => {
   console.log(reason, p);
 });
 // run crawler
-const crawlPerSecond = parseInt(config.puppeteer.crawlPeriod, 10) || 600;
+const crawlPerSecondLatebird =
+  parseInt(config.puppeteer.crawlPeriod, 10) || 3600;
+const crawlPerSecondOfficial =
+  parseInt(config.puppeteer.crawlPeriodOfficial, 10) || 3600;
 
 // official
 async function x() {
@@ -36,16 +39,16 @@ async function x() {
     const [ip] = arrayShuffle(proxyIps);
     const [c] = combis;
     console.log(ip, combis.length);
-    await runPuppeteer(pgPool, redisClient, c, ip);
+    await runPuppeteerOfficial(pgPool, redisClient, c, ip);
     await sleep((10 + Math.floor(Math.random() * 8)) * 1000);
   }
   console.log('finish this period');
 }
 x();
-setInterval(x, 3600 * 1000);
+setInterval(x, crawlPerSecondOfficial * 1000);
 
 // latebird
-// runPuppeteer(pgPool, redisClient);
-// setInterval(() => {
-//   runPuppeteer(pgPool, redisClient);
-// }, crawlPerSecond * 1000);
+runPuppeteerLatebird(pgPool, redisClient);
+setInterval(() => {
+  runPuppeteerLatebird(pgPool, redisClient);
+}, crawlPerSecondLatebird * 1000);

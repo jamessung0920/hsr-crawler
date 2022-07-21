@@ -14,45 +14,51 @@ async function getUserExpectedTickets(userInput, pgPool, redisClient) {
     10,
   );
   try {
-    const tickets = await ticketRepo.getTickets(
+    const officialContainerJsonTickets = await getContainerJsonTickets(
       pgPool,
+      redisClient,
       expectedStationPair,
       expectedDepartureAfter,
       expectedPurchaseCount,
       'official',
     );
-
-    let replyText = '';
-    let hasTicket = false;
-    const containerJsonTicketsForResponse = [];
-    if (Array.isArray(tickets.rows) && tickets.rows.length > 0) {
-      for (const [idx, ticket] of tickets.rows.entries()) {
-        if (idx >= config.webhook.line.showTicketCount) break;
-        const rawTicket = await redisClient.get(ticket.id);
-        const rawTicketObj = JSON.parse(rawTicket);
-        containerJsonTicketsForResponse.push(
-          generateLineBubbleContainerJson(rawTicketObj),
-        );
-      }
-      replyText = `有票喔！幫您列出資訊如下 (最多${config.webhook.line.showTicketCount}筆)`;
-      hasTicket = true;
-    } else {
-      replyText = '沒有找到符合的票喔！';
-    }
+    const latebirdContainerJsonTickets = await getContainerJsonTickets(
+      pgPool,
+      redisClient,
+      expectedStationPair,
+      expectedDepartureAfter,
+      expectedPurchaseCount,
+      'latebird',
+    );
 
     const messageObjects = [
       {
         type: 'text',
-        text: replyText,
+        text:
+          officialContainerJsonTickets.length > 0 ||
+          latebirdContainerJsonTickets.length > 0
+            ? `有票喔！幫您列出資訊如下 (最多${config.webhook.line.showTicketCount}筆)`
+            : '沒有找到符合的票喔！',
       },
     ];
-    if (hasTicket) {
+
+    if (officialContainerJsonTickets.length > 0) {
       messageObjects.push({
         type: 'flex',
         altText: 'this is a flex message',
         contents: {
           type: 'carousel',
-          contents: [...containerJsonTicketsForResponse],
+          contents: officialContainerJsonTickets,
+        },
+      });
+    }
+    if (latebirdContainerJsonTickets.length > 0) {
+      messageObjects.push({
+        type: 'flex',
+        altText: 'this is a flex message',
+        contents: {
+          type: 'carousel',
+          contents: latebirdContainerJsonTickets,
         },
       });
     }
@@ -112,6 +118,38 @@ async function insertUserWishTicket(userId, userInput, pgPool) {
     console.error(err);
     throw err;
   }
+}
+
+async function getContainerJsonTickets(
+  pgPool,
+  redisClient,
+  stationPair,
+  depatureAfter,
+  purchaseCount,
+  origin,
+) {
+  const tickets = await ticketRepo.getTickets(
+    pgPool,
+    stationPair,
+    depatureAfter,
+    purchaseCount,
+    origin,
+  );
+
+  if (Array.isArray(tickets.rows) && tickets.rows.length === 0) return [];
+
+  const containerJsonTicketsForResponse = [];
+  if (Array.isArray(tickets.rows) && tickets.rows.length > 0) {
+    for (const [idx, ticket] of tickets.rows.entries()) {
+      if (idx >= config.webhook.line.showTicketCount) break;
+      const rawTicket = await redisClient.get(ticket.id);
+      const rawTicketObj = JSON.parse(rawTicket);
+      containerJsonTicketsForResponse.push(
+        generateLineBubbleContainerJson(rawTicketObj),
+      );
+    }
+  }
+  return containerJsonTicketsForResponse;
 }
 
 export default { getUserExpectedTickets, insertUserWishTicket };

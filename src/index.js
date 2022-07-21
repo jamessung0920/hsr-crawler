@@ -48,61 +48,92 @@ process.on('unhandledRejection', (reason, p) => {
 });
 
 setInterval(async () => {
-  const allUsersFollowTickets =
+  const allUsersWishTickets =
     await userWishTicketRepo.getAllUnnotifiedUsersWishTickets(pgPool);
+  console.log(allUsersWishTickets.length);
   if (
-    Array.isArray(allUsersFollowTickets.rows) &&
-    allUsersFollowTickets.rows.length > 0
+    Array.isArray(allUsersWishTickets.rows) &&
+    allUsersWishTickets.rows.length > 0
   ) {
-    for (const a of allUsersFollowTickets.rows) {
-      const tickets = await ticketRepo.getTickets(
-        pgPool,
-        a.station_pair,
-        a.departure_time,
-        a.count,
-        'official',
+    for (const a of allUsersWishTickets.rows) {
+      const [officialContainerJsonTickets, latebirdContainerJsonTickets] =
+        await Promise.all([
+          getContainerJsonTickets(a, 'official'),
+          getContainerJsonTickets(a, 'latebird'),
+        ]);
+      if (
+        officialContainerJsonTickets.length === 0 &&
+        latebirdContainerJsonTickets.length === 0
+      ) {
+        continue;
+      }
+
+      const responseMessages = [];
+      if (officialContainerJsonTickets.length > 0) {
+        responseMessages.push({
+          type: 'flex',
+          altText: 'this is a flex message',
+          contents: {
+            type: 'carousel',
+            contents: officialContainerJsonTickets,
+          },
+        });
+      }
+      if (latebirdContainerJsonTickets.length > 0) {
+        responseMessages.push({
+          type: 'flex',
+          altText: 'this is a flex message',
+          contents: {
+            type: 'carousel',
+            contents: latebirdContainerJsonTickets,
+          },
+        });
+      }
+
+      await axios.post(
+        'https://api.line.me/v2/bot/message/push',
+        {
+          to: a.line_user_id,
+          messages: [
+            {
+              type: 'text',
+              text: '您關注的票目前有喔！此通知只會通知一次。',
+            },
+            ...responseMessages,
+          ],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${config.webhook.line.channelAccessToken}`,
+            'Content-Type': 'application/json',
+          },
+        },
       );
 
-      if (Array.isArray(tickets.rows) && tickets.rows.length > 0) {
-        const containerJsonTicketsForResponse = [];
-        for (const [idx, ticket] of tickets.rows.entries()) {
-          if (idx >= config.webhook.line.showTicketCount) break;
-          const rawTicket = await redisClient.get(ticket.id);
-          const rawTicketObj = JSON.parse(rawTicket);
-          containerJsonTicketsForResponse.push(
-            generateLineBubbleContainerJson(rawTicketObj),
-          );
-        }
-
-        await axios.post(
-          'https://api.line.me/v2/bot/message/push',
-          {
-            to: a.line_user_id,
-            messages: [
-              {
-                type: 'text',
-                text: '您關注的票目前有喔！此通知只會通知一次。',
-              },
-              {
-                type: 'flex',
-                altText: 'this is a flex message',
-                contents: {
-                  type: 'carousel',
-                  contents: [...containerJsonTicketsForResponse],
-                },
-              },
-            ],
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${config.webhook.line.channelAccessToken}`,
-              'Content-Type': 'application/json',
-            },
-          },
-        );
-
-        await userWishTicketRepo.updateHasMetAndNotifiedById(pgPool, a.id);
-      }
+      await userWishTicketRepo.updateHasMetAndNotifiedById(pgPool, a.id);
     }
   }
-}, 300 * 1000);
+}, config.userWishTicket.checkPeriod * 1000);
+
+async function getContainerJsonTickets(ticket, origin) {
+  const tickets = await ticketRepo.getTickets(
+    pgPool,
+    ticket.station_pair,
+    ticket.departure_time,
+    ticket.count,
+    origin,
+  );
+
+  if (Array.isArray(tickets.rows) && tickets.rows.length === 0) return [];
+
+  const containerJsonTicketsForResponse = [];
+  for (const [idx, t] of tickets.rows.entries()) {
+    if (idx >= config.webhook.line.showTicketCount) break;
+    const rawTicket = await redisClient.get(t.id);
+    const rawTicketObj = JSON.parse(rawTicket);
+    containerJsonTicketsForResponse.push(
+      generateLineBubbleContainerJson(rawTicketObj),
+    );
+  }
+  return containerJsonTicketsForResponse;
+}

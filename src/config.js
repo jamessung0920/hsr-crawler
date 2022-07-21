@@ -21,17 +21,20 @@ export default {
   },
   puppeteer: {
     crawlPeriod: process.env.CRAWL_PERIOD,
+    crawlPeriodOfficial: process.env.CRAWL_PERIOD_OFFICIAL,
     crawlDaysIgnoredSinceToday: process.env.CRAWL_DAYS_IGNORED_FROM_TODAY,
     crawlDays: process.env.CRAWL_DAYS,
   },
   upstreamProxy: {
     port: process.env.UPSTREAM_PROXY_PORT,
     ips: process.env.UPSTREAM_PROXY_IPS,
-    ip: process.env.UPSTREAM_PROXY_IP,
     username: process.env.UPSTREAM_PROXY_USERNAME,
     password: process.env.UPSTREAM_PROXY_PASSWORD,
   },
   captchaSolver: {
     apiUrl: process.env.CAPTCHA_SOLVER_API_URL,
+  },
+  userWishTicket: {
+    checkPeriod: process.env.USER_WISH_TICKET_CHECK_PERIOD,
   },
 };

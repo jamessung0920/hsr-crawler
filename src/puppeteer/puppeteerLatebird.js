@@ -4,18 +4,21 @@ import { v4 as uuidv4 } from 'uuid';
 import randomUseragent from 'random-useragent';
 import constants from '../constants';
 import config from '../config';
+import arrayShuffle from '../utils/arrayShuffle';
 import ticketRepo from '../repository/ticket';
 
 puppeteer.use(StealthPlugin());
 
 async function runPuppeteer(pgPool, redisClient) {
   const {
-    ip: proxyIp,
+    ips: proxyIps,
     port: proxyPort,
     username: proxyUsername,
     password: proxyPassword,
   } = config.upstreamProxy;
   const { expireTime } = config.redis;
+  const [proxyIp] = arrayShuffle(proxyIps.split('|'));
+
   // 1. puppeteer FATAL:zygote_host_impl_linux.cc(191)] Check failed:
   // can check reference (https://github.com/Zenika/alpine-chrome/issues/152, https://github.com/Zenika/alpine-chrome/issues/33)
   // 2. be careful with --no-sandbox (https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#setting-up-chrome-linux-sandbox)
